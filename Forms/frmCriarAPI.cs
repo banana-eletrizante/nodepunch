@@ -123,7 +123,7 @@ namespace NodePunch.Forms
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI Semibold", 10.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                TabStop = false
+                TabStop = true
             };
             btnCriarAPI.FlatAppearance.BorderSize = 0;
             btnCriarAPI.FlatAppearance.MouseOverBackColor = CorAmareloHover;
@@ -147,6 +147,7 @@ namespace NodePunch.Forms
                 chkValidator, lblCampos, txtCampos,
                 btnCriarAPI
             });
+            this.AcceptButton = btnCriarAPI;
 
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -208,7 +209,22 @@ namespace NodePunch.Forms
             }
 
             string[] campos = txtCampos.Text.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                                             .Select(c => c.Trim()).Where(c => c != "").ToArray();
+                .Select(c => Funcoes.ToCamelCase(c.Trim()))
+                .Where(c => c != "")
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            string campoInvalido = campos.FirstOrDefault(c =>
+                !Funcoes.EhIdentificadorJSValido(c) || Funcoes.EhPalavraReservadaJS(c));
+            if (campoInvalido != null)
+            {
+                MessageBox.Show(
+                    $"O campo \"{campoInvalido}\" não é um identificador JavaScript válido.",
+                    "Atenção",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Exclamation);
+                return;
+            }
 
             string conteudo;
 
@@ -216,7 +232,7 @@ namespace NodePunch.Forms
             {
                 string cadeiaValidacoes = campos.Length == 0
                     ? tab + "// Nenhum campo obrigatório definido — ajuste manualmente se precisar\n"
-                    : string.Join("\n", campos.Select(c => tab + "body('" + c + "').notEmpty().withMessage('" + c + " é obrigatório'),"));
+                    : string.Join("\n", campos.Select(c => tab + "body('" + Funcoes.EscaparJS(c) + "').notEmpty().withMessage('" + Funcoes.EscaparJS(c) + " é obrigatório'),"));
 
                 string handlersValidator = "";
                 if (chkGET.Checked)
@@ -243,7 +259,7 @@ namespace NodePunch.Forms
 handlersValidator +
 "module.exports = router;\n";
 
-                bool depOk = Funcoes.AdicionarDependencia(CaminhoProjeto, "express-validator", "^7.2.0");
+                bool depOk = Funcoes.AdicionarDependencia(CaminhoProjeto, "express-validator", "^7.3.2");
                 if (!depOk)
                 {
                     MessageBox.Show(

@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace NodePunch.Core
@@ -11,6 +14,11 @@ namespace NodePunch.Core
     internal static class Funcoes
     {
         private const string tab = "\t";
+
+        private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
 
         public static void CriarPasta(string caminho)
         {
@@ -23,12 +31,16 @@ namespace NodePunch.Core
             CriarPasta(caminho);
             try
             {
-                using StreamWriter sw = new StreamWriter(Path.Combine(caminho, nome + extensao));
-                sw.Write(conteudo);
+                File.WriteAllText(
+                    Path.Combine(caminho, nome + extensao),
+                    conteudo,
+                    new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
             }
-            catch
+            catch (Exception ex)
             {
-                throw new Exception("Não foi possível criar o arquivo: " + Path.Combine(caminho, nome + extensao));
+                throw new IOException(
+                    "Não foi possível criar o arquivo: " + Path.Combine(caminho, nome + extensao),
+                    ex);
             }
         }
 
@@ -53,16 +65,27 @@ namespace NodePunch.Core
             if (dados.ComSP)
             {
                 consultarExecutar =
-tab + "// Equivalente ao Consultar($nomeProcedure, $parametros) do KickPHP, para Stored Procedures\n" +
-tab + "static async consultar(nomeProcedure, parametros = []) {\n" +
+tab + "static async consultar(comando, parametros = []) {\n" +
 tab + tab + "await Banco.#conectar();\n" +
+tab + tab + "const [linhas] = await Banco.#pool.execute(comando, parametros);\n" +
+tab + tab + "return linhas;\n" +
+tab + "}\n\n" +
+tab + "static async executar(comando, parametros = []) {\n" +
+tab + tab + "await Banco.#conectar();\n" +
+tab + tab + "await Banco.#pool.execute(comando, parametros);\n" +
+tab + "}\n\n" +
+tab + "// Chamadas específicas para stored procedures\n" +
+tab + "static async consultarProcedure(nomeProcedure, parametros = []) {\n" +
+tab + tab + "await Banco.#conectar();\n" +
+tab + tab + "if (!/^[A-Za-z0-9_]+$/.test(nomeProcedure)) throw new Error('Nome de procedure inválido.');\n" +
 tab + tab + "const placeholders = parametros.map(() => '?').join(', ');\n" +
 tab + tab + "const sql = placeholders ? `CALL ${nomeProcedure}(${placeholders})` : `CALL ${nomeProcedure}`;\n" +
 tab + tab + "const [linhas] = await Banco.#pool.query(sql, parametros);\n" +
 tab + tab + "return linhas[0] || [];\n" +
 tab + "}\n\n" +
-tab + "static async executar(nomeProcedure, parametros = []) {\n" +
+tab + "static async executarProcedure(nomeProcedure, parametros = []) {\n" +
 tab + tab + "await Banco.#conectar();\n" +
+tab + tab + "if (!/^[A-Za-z0-9_]+$/.test(nomeProcedure)) throw new Error('Nome de procedure inválido.');\n" +
 tab + tab + "const placeholders = parametros.map(() => '?').join(', ');\n" +
 tab + tab + "const sql = placeholders ? `CALL ${nomeProcedure}(${placeholders})` : `CALL ${nomeProcedure}`;\n" +
 tab + tab + "await Banco.#pool.query(sql, parametros);\n" +
@@ -194,44 +217,56 @@ tab + "}\n" +
         // Gera o package.json do projeto
         public static void CriarPackageJson(string caminhoProjeto, string nomeProjeto, TipoBanco tipoBanco)
         {
-            string deps = "\"express\": \"^4.19.2\",\n" + tab + tab + "\"cors\": \"^2.8.5\",\n" + tab + tab + "\"dotenv\": \"^16.4.5\"";
+            JsonObject dependencias = new JsonObject
+            {
+                ["cors"] = "^2.8.6",
+                ["dotenv"] = "^17.4.2",
+                ["express"] = "^5.2.1",
+                ["express-rate-limit"] = "^8.7.0",
+                ["helmet"] = "^8.3.0"
+            };
 
             switch (tipoBanco)
             {
                 case TipoBanco.MySQL:
-                    deps += ",\n" + tab + tab + "\"mysql2\": \"^3.11.0\"";
+                    dependencias["mysql2"] = "^3.24.4";
                     break;
                 case TipoBanco.PostgreSQL:
-                    deps += ",\n" + tab + tab + "\"pg\": \"^8.12.0\"";
+                    dependencias["pg"] = "^8.23.0";
                     break;
                 case TipoBanco.Firebase:
-                    deps += ",\n" + tab + tab + "\"firebase-admin\": \"^12.3.1\"";
+                    dependencias["firebase-admin"] = "^14.3.0";
                     break;
             }
 
-            string conteudo =
-"{\n" +
-tab + "\"name\": \"" + nomeProjeto.ToLower() + "\",\n" +
-tab + "\"version\": \"1.0.0\",\n" +
-tab + "\"main\": \"server.js\",\n" +
-tab + "\"scripts\": {\n" +
-tab + tab + "\"start\": \"node server.js\",\n" +
-tab + tab + "\"dev\": \"nodemon server.js\"\n" +
-tab + "},\n" +
-tab + "\"dependencies\": {\n" +
-tab + tab + deps + "\n" +
-tab + "},\n" +
-tab + "\"devDependencies\": {\n" +
-tab + tab + "\"nodemon\": \"^3.1.4\"\n" +
-tab + "}\n" +
-"}\n";
+            JsonObject package = new JsonObject
+            {
+                ["name"] = nomeProjeto.ToLowerInvariant(),
+                ["version"] = "1.0.0",
+                ["private"] = true,
+                ["description"] = "Backend Express gerado pelo NodePunch",
+                ["main"] = "server.js",
+                ["engines"] = new JsonObject { ["node"] = ">=20" },
+                ["scripts"] = new JsonObject
+                {
+                    ["start"] = "node server.js",
+                    ["dev"] = "nodemon server.js",
+                    ["check"] = "node --check server.js"
+                },
+                ["dependencies"] = dependencias,
+                ["devDependencies"] = new JsonObject { ["nodemon"] = "^3.1.14" }
+            };
+
+            string conteudo = package.ToJsonString(JsonOptions) + Environment.NewLine;
             CriarArquivo(caminhoProjeto, "package", conteudo, ".json");
         }
 
         // Gera o .env conforme o tipo de banco
         public static void CriarEnv(string caminhoProjeto, ConexaoBanco dados)
         {
-            string conteudo = "PORT=3000\n";
+            string conteudo = "NODE_ENV=development\n" +
+                              "PORT=3000\n" +
+                              "API_RATE_LIMIT_MAX=100\n";
 
             switch (dados.Tipo)
             {
@@ -258,6 +293,30 @@ tab + "}\n" +
             CriarArquivo(caminhoProjeto, ".env", conteudo, "");
         }
 
+        public static void CriarEnvExemplo(string caminhoProjeto, TipoBanco tipo)
+        {
+            string conteudo = "NODE_ENV=development\n" +
+                              "PORT=3000\n" +
+                              "API_RATE_LIMIT_MAX=100\n";
+
+            if (tipo == TipoBanco.MySQL || tipo == TipoBanco.PostgreSQL)
+            {
+                conteudo += "DB_HOST=localhost\n" +
+                            "DB_PORT=" + (tipo == TipoBanco.MySQL ? "3306" : "5432") + "\n" +
+                            "DB_USER=\n" +
+                            "DB_PASSWORD=\n" +
+                            "DB_NAME=\n";
+            }
+            else if (tipo == TipoBanco.Firebase)
+            {
+                conteudo += "FIREBASE_PROJECT_ID=\n" +
+                            "FIREBASE_SERVICE_ACCOUNT=./firebaseServiceAccountKey.json\n";
+            }
+
+            conteudo += "JWT_SECRET=\n";
+            CriarArquivo(caminhoProjeto, ".env.example", conteudo, "");
+        }
+
         // Gera o server.js (ponto de entrada Express)
         public static void CriarServerJs(string caminhoProjeto)
         {
@@ -265,12 +324,32 @@ tab + "}\n" +
 "require('dotenv').config();\n" +
 "const express = require('express');\n" +
 "const cors = require('cors');\n" +
+"const helmet = require('helmet');\n" +
+"const { rateLimit } = require('express-rate-limit');\n" +
 "const corsOptions = require('./src/config/cors');\n\n" +
 "const app = express();\n\n" +
-"app.use(express.json());\n" +
+"app.disable('x-powered-by');\n" +
+"app.use(helmet());\n" +
+"app.use(express.json({ limit: '1mb' }));\n" +
 "app.use(cors(corsOptions));\n\n" +
+"app.use('/api', rateLimit({\n" +
+tab + "windowMs: 15 * 60 * 1000,\n" +
+tab + "limit: Number(process.env.API_RATE_LIMIT_MAX) || 100,\n" +
+tab + "standardHeaders: 'draft-8',\n" +
+tab + "legacyHeaders: false\n" +
+"}));\n\n" +
+"app.get('/health', (req, res) => {\n" +
+tab + "res.json({ status: 'ok', timestamp: new Date().toISOString() });\n" +
+"});\n\n" +
 "// Rotas serão registradas aqui pelo nodepunch conforme você criar novas APIs\n" +
 "// Exemplo: app.use('/api/exemplo', require('./src/routes/exemploRoutes'));\n\n" +
+"app.use((req, res) => {\n" +
+tab + "res.status(404).json({ mensagem: 'Rota não encontrada.' });\n" +
+"});\n\n" +
+"app.use((erro, req, res, next) => {\n" +
+tab + "console.error(erro);\n" +
+tab + "res.status(500).json({ mensagem: 'Erro interno do servidor.' });\n" +
+"});\n\n" +
 "const PORT = process.env.PORT || 3000;\n" +
 "app.listen(PORT, () => {\n" +
 tab + "console.log(`Servidor rodando em http://localhost:${PORT}`);\n" +
@@ -304,14 +383,19 @@ tab + "credentials: true\n" +
 
             string conteudo =
 "# " + nomeProjeto + "\n\n" +
-"Projeto gerado com [nodepunch](https://github.com/) — backend Node.js orientado a objeto com Express.\n\n" +
-"## Como rodar\n\n" +
+"Backend Node.js com Express 5, gerado pelo [NodePunch](https://github.com/banana-eletrizante/nodepunch).\n\n" +
+"## Requisitos\n\n" +
+"- Node.js 20 ou superior\n" +
+"- npm\n\n" +
+"## Primeiros passos\n\n" +
 "```bash\n" +
 "npm install\n" +
 "npm run dev   # com hot-reload (nodemon)\n" +
 "# ou\n" +
 "npm run start\n" +
 "```\n\n" +
+"Verifique o serviço em `GET http://localhost:3000/health`.\n\n" +
+"Revise o `.env` gerado antes de iniciar. O `.env.example` pode ser versionado como referência, mas não contém segredos.\n\n" +
 "## Estrutura\n\n" +
 "```\n" +
 "src/\n" +
@@ -324,10 +408,16 @@ tab + "config/       # Configurações (CORS, etc.)\n" +
 "```\n\n" +
 "## Configuração\n\n" +
 dbInfo +
-"- Variáveis de ambiente em `.env` (não versionado)\n\n" +
+"- Variáveis de ambiente em `.env` (não versionado)\n" +
+"- Modelo seguro das variáveis em `.env.example`\n" +
+"- Origens permitidas em `src/config/cors.js`\n" +
+"- Limite de requisições em `API_RATE_LIMIT_MAX`\n\n" +
+"## Segurança incluída\n\n" +
+"O servidor utiliza Helmet, limite de corpo JSON, rate limiting, CORS configurável e respostas genéricas para erros internos.\n\n" +
 "## Autenticação\n\n" +
 "Se você gerou autenticação JWT pelo nodepunch, veja as rotas em `src/routes/authRoutes.js` " +
-"(`POST /api/auth/registrar` e `POST /api/auth/login`).\n";
+"(`POST /api/auth/registrar` e `POST /api/auth/login`). Para bancos SQL, crie uma tabela `usuarios` " +
+"com `id`, `email` único e `senha`. Nunca versione `.env` nem credenciais do Firebase.\n";
 
             CriarArquivo(caminhoProjeto, "README", conteudo, ".md");
         }
@@ -367,18 +457,26 @@ dbInfo +
             string caminhoPackage = Path.Combine(caminhoProjeto, "package.json");
             if (!File.Exists(caminhoPackage)) return false;
 
-            string conteudo = File.ReadAllText(caminhoPackage);
-            string chave = "\"" + nomePacote + "\"";
-            if (conteudo.Contains(chave)) return true; // já existe
-
-            string secao = devDependency ? "\"devDependencies\": {" : "\"dependencies\": {";
-            if (conteudo.Contains(secao))
+            try
             {
-                conteudo = conteudo.Replace(secao, secao + "\n" + tab + tab + chave + ": \"" + versao + "\",");
-                File.WriteAllText(caminhoPackage, conteudo);
+                JsonObject package = JsonNode.Parse(File.ReadAllText(caminhoPackage))?.AsObject();
+                if (package == null) return false;
+
+                string nomeSecao = devDependency ? "devDependencies" : "dependencies";
+                JsonObject secao = package[nomeSecao] as JsonObject ?? new JsonObject();
+                package[nomeSecao] = secao;
+                secao[nomePacote] = versao;
+
+                File.WriteAllText(
+                    caminhoPackage,
+                    package.ToJsonString(JsonOptions) + Environment.NewLine,
+                    new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
                 return true;
             }
-            return false;
+            catch (JsonException)
+            {
+                return false;
+            }
         }
 
         // Adiciona uma variável ao .env existente, se ainda não estiver lá
@@ -386,7 +484,9 @@ dbInfo +
         {
             string caminhoEnv = Path.Combine(caminhoProjeto, ".env");
             string conteudo = File.Exists(caminhoEnv) ? File.ReadAllText(caminhoEnv) : "";
-            if (conteudo.Contains(chave + "=")) return;
+            bool existe = conteudo.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)
+                .Any(linha => linha.TrimStart().StartsWith(chave + "=", StringComparison.Ordinal));
+            if (existe) return;
 
             conteudo += (conteudo.EndsWith("\n") || conteudo == "" ? "" : "\n") + chave + "=" + valor + "\n";
             File.WriteAllText(caminhoEnv, conteudo);
@@ -396,6 +496,9 @@ dbInfo +
         // Retorna true se tudo (incluindo dependências no package.json) foi aplicado com sucesso
         public static bool GerarAuthJWT(string caminhoProjeto, TipoBanco tipo)
         {
+            if (tipo == TipoBanco.Nenhum)
+                throw new InvalidOperationException("Configure um banco de dados antes de gerar autenticação.");
+
             string middleware =
 "const jwt = require('jsonwebtoken');\n" +
 "require('dotenv').config();\n\n" +
@@ -427,10 +530,15 @@ tab + "});\n" +
 "class AuthController {\n" +
 tab + "static async registrar(req, res) {\n" +
 tab + tab + "const { email, senha } = req.body;\n" +
-tab + tab + "if (!email || !senha) return res.status(400).json({ mensagem: 'E-mail e senha são obrigatórios.' });\n\n" +
-tab + tab + "const senhaCriptografada = await bcrypt.hash(senha, 10);\n" +
+tab + tab + "const emailNormalizado = String(email || '').trim().toLowerCase();\n" +
+tab + tab + "if (!emailNormalizado || typeof senha !== 'string' || senha.length < 8) {\n" +
+tab + tab + tab + "return res.status(400).json({ mensagem: 'Informe um e-mail e uma senha com pelo menos 8 caracteres.' });\n" +
+tab + tab + "}\n\n" +
 tab + tab + "try {\n" +
-tab + tab + tab + "await Banco.executar('usuarios', { email, senha: senhaCriptografada });\n" +
+tab + tab + tab + "const existentes = await Banco.consultar('usuarios', [['email', '==', emailNormalizado]]);\n" +
+tab + tab + tab + "if (existentes.length > 0) return res.status(409).json({ mensagem: 'E-mail já cadastrado.' });\n" +
+tab + tab + tab + "const senhaCriptografada = await bcrypt.hash(senha, 12);\n" +
+tab + tab + tab + "await Banco.executar('usuarios', { email: emailNormalizado, senha: senhaCriptografada });\n" +
 tab + tab + tab + "res.status(201).json({ mensagem: 'Usuário registrado com sucesso.' });\n" +
 tab + tab + "} catch (erro) {\n" +
 tab + tab + tab + "res.status(500).json({ mensagem: 'Erro ao registrar usuário.' });\n" +
@@ -438,14 +546,19 @@ tab + tab + "}\n" +
 tab + "}\n\n" +
 tab + "static async login(req, res) {\n" +
 tab + tab + "const { email, senha } = req.body;\n" +
-tab + tab + "if (!email || !senha) return res.status(400).json({ mensagem: 'E-mail e senha são obrigatórios.' });\n\n" +
-tab + tab + "const usuarios = await Banco.consultar('usuarios', [['email', '==', email]]);\n" +
-tab + tab + "const usuario = usuarios[0];\n\n" +
-tab + tab + "if (!usuario || !(await bcrypt.compare(senha, usuario.senha))) {\n" +
-tab + tab + tab + "return res.status(401).json({ mensagem: 'Credenciais inválidas.' });\n" +
-tab + tab + "}\n\n" +
-tab + tab + "const token = jwt.sign({ id: usuario.id, email: usuario.email }, process.env.JWT_SECRET, { expiresIn: '8h' });\n" +
-tab + tab + "res.json({ token });\n" +
+tab + tab + "const emailNormalizado = String(email || '').trim().toLowerCase();\n" +
+tab + tab + "if (!emailNormalizado || typeof senha !== 'string') return res.status(400).json({ mensagem: 'E-mail e senha são obrigatórios.' });\n\n" +
+tab + tab + "try {\n" +
+tab + tab + tab + "const usuarios = await Banco.consultar('usuarios', [['email', '==', emailNormalizado]]);\n" +
+tab + tab + tab + "const usuario = usuarios[0];\n" +
+tab + tab + tab + "if (!usuario || !(await bcrypt.compare(senha, usuario.senha))) {\n" +
+tab + tab + tab + tab + "return res.status(401).json({ mensagem: 'Credenciais inválidas.' });\n" +
+tab + tab + tab + "}\n" +
+tab + tab + tab + "const token = jwt.sign({ id: usuario.id, email: usuario.email }, process.env.JWT_SECRET, { expiresIn: '8h' });\n" +
+tab + tab + tab + "res.json({ token });\n" +
+tab + tab + "} catch (erro) {\n" +
+tab + tab + tab + "res.status(500).json({ mensagem: 'Erro ao autenticar usuário.' });\n" +
+tab + tab + "}\n" +
 tab + "}\n" +
 "}\n\n" +
 "module.exports = AuthController;\n";
@@ -465,25 +578,34 @@ tab + "}\n" +
 "class AuthController {\n" +
 tab + "static async registrar(req, res) {\n" +
 tab + tab + "const { email, senha } = req.body;\n" +
-tab + tab + "if (!email || !senha) return res.status(400).json({ mensagem: 'E-mail e senha são obrigatórios.' });\n\n" +
-tab + tab + "const senhaCriptografada = await bcrypt.hash(senha, 10);\n" +
+tab + tab + "const emailNormalizado = String(email || '').trim().toLowerCase();\n" +
+tab + tab + "if (!emailNormalizado || typeof senha !== 'string' || senha.length < 8) {\n" +
+tab + tab + tab + "return res.status(400).json({ mensagem: 'Informe um e-mail e uma senha com pelo menos 8 caracteres.' });\n" +
+tab + tab + "}\n\n" +
 tab + tab + "try {\n" +
-tab + tab + tab + "await Banco.executar('" + sqlInsert + "', [email, senhaCriptografada]);\n" +
+tab + tab + tab + "const senhaCriptografada = await bcrypt.hash(senha, 12);\n" +
+tab + tab + tab + "await Banco.executar('" + sqlInsert + "', [emailNormalizado, senhaCriptografada]);\n" +
 tab + tab + tab + "res.status(201).json({ mensagem: 'Usuário registrado com sucesso.' });\n" +
 tab + tab + "} catch (erro) {\n" +
+tab + tab + tab + "if (erro.code === 'ER_DUP_ENTRY' || erro.code === '23505') return res.status(409).json({ mensagem: 'E-mail já cadastrado.' });\n" +
 tab + tab + tab + "res.status(500).json({ mensagem: 'Erro ao registrar usuário.' });\n" +
 tab + tab + "}\n" +
 tab + "}\n\n" +
 tab + "static async login(req, res) {\n" +
 tab + tab + "const { email, senha } = req.body;\n" +
-tab + tab + "if (!email || !senha) return res.status(400).json({ mensagem: 'E-mail e senha são obrigatórios.' });\n\n" +
-tab + tab + "const usuarios = await Banco.consultar('" + sqlSelect + "', [email]);\n" +
-tab + tab + "const usuario = usuarios[0];\n\n" +
-tab + tab + "if (!usuario || !(await bcrypt.compare(senha, usuario.senha))) {\n" +
-tab + tab + tab + "return res.status(401).json({ mensagem: 'Credenciais inválidas.' });\n" +
-tab + tab + "}\n\n" +
-tab + tab + "const token = jwt.sign({ id: usuario.id, email: usuario.email }, process.env.JWT_SECRET, { expiresIn: '8h' });\n" +
-tab + tab + "res.json({ token });\n" +
+tab + tab + "const emailNormalizado = String(email || '').trim().toLowerCase();\n" +
+tab + tab + "if (!emailNormalizado || typeof senha !== 'string') return res.status(400).json({ mensagem: 'E-mail e senha são obrigatórios.' });\n\n" +
+tab + tab + "try {\n" +
+tab + tab + tab + "const usuarios = await Banco.consultar('" + sqlSelect + "', [emailNormalizado]);\n" +
+tab + tab + tab + "const usuario = usuarios[0];\n" +
+tab + tab + tab + "if (!usuario || !(await bcrypt.compare(senha, usuario.senha))) {\n" +
+tab + tab + tab + tab + "return res.status(401).json({ mensagem: 'Credenciais inválidas.' });\n" +
+tab + tab + tab + "}\n" +
+tab + tab + tab + "const token = jwt.sign({ id: usuario.id, email: usuario.email }, process.env.JWT_SECRET, { expiresIn: '8h' });\n" +
+tab + tab + tab + "res.json({ token });\n" +
+tab + tab + "} catch (erro) {\n" +
+tab + tab + tab + "res.status(500).json({ mensagem: 'Erro ao autenticar usuário.' });\n" +
+tab + tab + "}\n" +
 tab + "}\n" +
 "}\n\n" +
 "module.exports = AuthController;\n";
@@ -499,9 +621,9 @@ tab + "}\n" +
 "module.exports = router;\n";
             CriarArquivo(Path.Combine(caminhoProjeto, "src", "routes"), "authRoutes", authRoutes);
 
-            bool depsOk = AdicionarDependencia(caminhoProjeto, "jsonwebtoken", "^9.0.2");
-            depsOk &= AdicionarDependencia(caminhoProjeto, "bcryptjs", "^2.4.3");
-            AdicionarVariavelEnv(caminhoProjeto, "JWT_SECRET", Guid.NewGuid().ToString("N"));
+            bool depsOk = AdicionarDependencia(caminhoProjeto, "jsonwebtoken", "^9.0.3");
+            depsOk &= AdicionarDependencia(caminhoProjeto, "bcryptjs", "^3.0.3");
+            AdicionarVariavelEnv(caminhoProjeto, "JWT_SECRET", Convert.ToHexString(RandomNumberGenerator.GetBytes(32)));
 
             string caminhoServer = Path.Combine(caminhoProjeto, "server.js");
             if (File.Exists(caminhoServer))
@@ -538,6 +660,12 @@ tab + "}\n" +
         public static bool EhPalavraReservadaJS(string valor)
         {
             return !string.IsNullOrWhiteSpace(valor) && PalavrasReservadasJS.Contains(valor.Trim().ToLower());
+        }
+
+        public static bool EhIdentificadorJSValido(string valor)
+        {
+            return !string.IsNullOrWhiteSpace(valor) &&
+                   Regex.IsMatch(valor, "^[A-Za-z_$][A-Za-z0-9_$]*$");
         }
 
         public static string PrimeiraMaiusculaSemAcento(string texto)

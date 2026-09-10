@@ -8,13 +8,21 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>NodePunch</RootNamespace>
     <AssemblyName>NodePunch</AssemblyName>
+    <Version>1.3.0</Version>
+    <Authors>André Rosler</Authors>
+    <Description>Gerador desktop de backends Node.js com Express, persistência e autenticação.</Description>
+    <RepositoryUrl>https://github.com/banana-eletrizante/nodepunch</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <ApplicationIcon>Resources\nodepunch.ico</ApplicationIcon>
+    <LangVersion>latest</LangVersion>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="Resources\nodepunch.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Compile Remove="NodePunch.Tests\**\*.cs" />
   </ItemGroup>
 
 </Project>

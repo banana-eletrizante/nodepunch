@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
+using Microsoft.VisualBasic.FileIO;
 
 namespace NodePunch.Core
 {
@@ -21,12 +23,15 @@ namespace NodePunch.Core
         {
             try
             {
-                string[] directories = Directory.GetDirectories(path);
+                string[] directories = Directory.GetDirectories(path)
+                    .OrderBy(directory => directory, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
                 foreach (string dir in directories)
                 {
                     DirectoryInfo di = new DirectoryInfo(dir);
                     if (!di.Name.Equals("node_modules", StringComparison.OrdinalIgnoreCase) &&
-                        !di.Name.Equals(".git", StringComparison.OrdinalIgnoreCase))
+                        !di.Name.Equals(".git", StringComparison.OrdinalIgnoreCase) &&
+                        !di.Attributes.HasFlag(FileAttributes.ReparsePoint))
                     {
                         TreeNode child = new TreeNode(di.Name) { Tag = dir };
                         node.Nodes.Add(child);
@@ -34,7 +39,9 @@ namespace NodePunch.Core
                     }
                 }
 
-                string[] files = Directory.GetFiles(path);
+                string[] files = Directory.GetFiles(path)
+                    .OrderBy(file => file, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
                 foreach (string file in files)
                 {
                     FileInfo fi = new FileInfo(file);
@@ -58,13 +65,27 @@ namespace NodePunch.Core
             }
 
             TreeNode selectedNode = arvore.SelectedNode;
-            string path = selectedNode.Tag.ToString();
+            string path = selectedNode.Tag?.ToString();
+            string raiz = arvore.Nodes.Count > 0 ? arvore.Nodes[0].Tag?.ToString() : null;
+
+            if (!EhCaminhoSeguroParaExcluir(raiz, path))
+            {
+                MessageBox.Show(
+                    "A pasta raiz do projeto não pode ser excluída pelo NodePunch.",
+                    "Operação bloqueada",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            path = Path.GetFullPath(path);
+
             try
             {
                 if (File.Exists(path))
-                    File.Delete(path);
+                    FileSystem.DeleteFile(path, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
                 else if (Directory.Exists(path))
-                    Directory.Delete(path, recursive: true);
+                    FileSystem.DeleteDirectory(path, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
                 else
                 {
                     MessageBox.Show("O caminho selecionado não existe mais.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Hand);
@@ -75,6 +96,27 @@ namespace NodePunch.Core
             catch (Exception ex)
             {
                 MessageBox.Show("Erro ao excluir: " + ex.Message, "Erro", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+            }
+        }
+
+        internal static bool EhCaminhoSeguroParaExcluir(string raiz, string alvo)
+        {
+            if (string.IsNullOrWhiteSpace(raiz) || string.IsNullOrWhiteSpace(alvo))
+                return false;
+
+            try
+            {
+                string raizCompleta = Path.GetFullPath(raiz)
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                string alvoCompleto = Path.GetFullPath(alvo);
+                string prefixoRaiz = raizCompleta + Path.DirectorySeparatorChar;
+
+                return !alvoCompleto.Equals(raizCompleta, StringComparison.OrdinalIgnoreCase) &&
+                       alvoCompleto.StartsWith(prefixoRaiz, StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is NotSupportedException || ex is PathTooLongException)
+            {
+                return false;
             }
         }
 

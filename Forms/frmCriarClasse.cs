@@ -114,6 +114,7 @@ namespace NodePunch.Forms
                 chkModelBanco, chkControlador,
                 btnCriarClasses
             });
+            this.AcceptButton = btnCriarClasses;
 
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -171,7 +172,7 @@ namespace NodePunch.Forms
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI Semibold", 10.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                TabStop = false
+                TabStop = true
             };
             btn.FlatAppearance.BorderSize = 0;
             btn.FlatAppearance.MouseOverBackColor = CorAmareloHover;
@@ -230,6 +231,11 @@ namespace NodePunch.Forms
             if (Funcoes.EhPalavraReservadaJS(nomeClasse))
             {
                 MessageBox.Show($"\"{nomeClasse}\" é uma palavra reservada do JavaScript e não pode ser usada como nome de classe.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
+            if (!Funcoes.EhIdentificadorJSValido(nomeClasse))
+            {
+                MessageBox.Show("O nome da classe deve começar com uma letra ou sublinhado.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
 

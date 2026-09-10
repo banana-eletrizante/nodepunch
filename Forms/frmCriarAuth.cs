@@ -72,7 +72,7 @@ namespace NodePunch.Forms
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI Semibold", 10.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                TabStop = false
+                TabStop = true
             };
             btnGerar.FlatAppearance.BorderSize = 0;
             btnGerar.FlatAppearance.MouseOverBackColor = CorAmareloHover;
@@ -87,6 +87,7 @@ namespace NodePunch.Forms
             this.Font = new Font("Segoe UI", 9f);
 
             this.Controls.AddRange(new Control[] { pnlAccent, lblTitulo, lblInfo, lblDetectado, btnGerar });
+            this.AcceptButton = btnGerar;
 
             this.Shown += (s, e) =>
             {

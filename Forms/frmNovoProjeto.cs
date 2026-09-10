@@ -103,6 +103,7 @@ namespace NodePunch.Forms
                 pnlCamposBanco,
                 btnCriarProjeto
             });
+            this.AcceptButton = btnCriarProjeto;
 
             AtualizarCamposBanco();
 
@@ -264,7 +265,7 @@ namespace NodePunch.Forms
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI Semibold", 10.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                TabStop = false
+                TabStop = true
             };
             btn.FlatAppearance.BorderSize = 0;
             btn.FlatAppearance.MouseOverBackColor = CorAmareloHover;
@@ -284,7 +285,7 @@ namespace NodePunch.Forms
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI Semibold", 11f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                TabStop = false
+                TabStop = true
             };
             btn.FlatAppearance.BorderSize = 2;
             btn.FlatAppearance.BorderColor = CorAmarelo;
@@ -419,8 +420,13 @@ namespace NodePunch.Forms
                     Funcoes.CriarClasseBaseBD(dados, Path.Combine(caminhoProjeto, "src", "base"));
                     Funcoes.CriarEnv(caminhoProjeto, dados);
                 }
+                else
+                {
+                    Funcoes.CriarEnv(caminhoProjeto, new ConexaoBanco { Tipo = TipoBanco.Nenhum });
+                }
 
                 Funcoes.CriarPackageJson(caminhoProjeto, txtNomeProjeto.Text, tipo);
+                Funcoes.CriarEnvExemplo(caminhoProjeto, tipo);
                 Funcoes.CriarServerJs(caminhoProjeto);
                 Funcoes.CriarReadme(caminhoProjeto, txtNomeProjeto.Text, tipo);
                 Funcoes.CriarGitignore(caminhoProjeto);

@@ -67,7 +67,7 @@ namespace NodePunch.Forms
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI Semibold", 10.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                TabStop = false
+                TabStop = true
             };
             btnSalvar.FlatAppearance.BorderSize = 0;
             btnSalvar.FlatAppearance.MouseOverBackColor = CorAmareloHover;
@@ -89,6 +89,7 @@ namespace NodePunch.Forms
                 lblEnv, txtEnv,
                 btnSalvar
             });
+            this.AcceptButton = btnSalvar;
 
             this.Shown += frmConfiguracoes_Shown;
 

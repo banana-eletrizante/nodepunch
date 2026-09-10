@@ -1,1 +1,4 @@
-<Solution />
+<Solution>
+  <Project Path="NodePunch.csproj" />
+  <Project Path="NodePunch.Tests/NodePunch.Tests.csproj" />
+</Solution>

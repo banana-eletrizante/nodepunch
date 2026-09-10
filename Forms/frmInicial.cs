@@ -70,7 +70,7 @@ namespace NodePunch.Forms
             btnInfo = CriarBotaoIcone("?", new Point(380, 18));
             btnInfo.Click += (s, e) =>
                 MessageBox.Show(
-                    "NODEPUNCH\nO impulso que seu Node.js precisava!\n\nVersão 1.0\nDesign inspirado no amarelo do JavaScript.",
+                    $"NODEPUNCH\nO impulso que seu Node.js precisava!\n\nVersão {Application.ProductVersion}\nDesign inspirado no amarelo do JavaScript.",
                     "Informações",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
@@ -94,6 +94,7 @@ namespace NodePunch.Forms
             this.Controls.Add(btnAbrir);
             this.Controls.Add(btnInfo);
             this.Controls.Add(btnFechar);
+            this.AcceptButton = btnCriar;
 
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -111,7 +112,7 @@ namespace NodePunch.Forms
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI Semibold", 11f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                TabStop = false
+                TabStop = true
             };
             btn.FlatAppearance.BorderSize = 0;
             btn.FlatAppearance.MouseOverBackColor = CorAmareloHover;
@@ -131,7 +132,7 @@ namespace NodePunch.Forms
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI Semibold", 11f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                TabStop = false
+                TabStop = true
             };
             btn.FlatAppearance.BorderSize = 2;
             btn.FlatAppearance.BorderColor = CorAmarelo;
@@ -163,7 +164,7 @@ namespace NodePunch.Forms
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 11f),
                 Cursor = Cursors.Hand,
-                TabStop = false
+                TabStop = true
             };
             btn.FlatAppearance.BorderSize = 0;
             btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(40, 40, 40);
