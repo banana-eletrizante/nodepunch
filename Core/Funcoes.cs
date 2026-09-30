@@ -119,6 +119,8 @@ tab + "}\n" +
 "app.get('/health', (_req, res) => {\n" +
 tab + "res.json({ ok: true, uptime: process.uptime() });\n" +
 "});\n\n" +
+"// Rotas serão registradas aqui pelo NodePunch conforme você criar novas APIs\n" +
+"// Exemplo: app.use('/api/exemplo', require('./src/routes/exemploRoutes'));\n\n" +
 "app.use((req, res) => {\n" +
 tab + "res.status(404).json({ mensagem: 'Rota não encontrada.' });\n" +
 "});\n\n" +
