@@ -1,23 +1,34 @@
 # NodePunch
 
-Ferramenta desktop em C# para criar backends Node.js (Express) sem montar a pasta na mão.
+App Windows em C# que monta um backend Node.js (Express) a partir de uma tela.
+Você escolhe nome, pasta e banco. O app cria a árvore, o `server.js`, o `.env` e já abre o `npm install`.
 
-Site: [andre-rosler.com](https://andre-rosler.com/projetos)
+Site: [andre-rosler.com/projetos](https://andre-rosler.com/projetos)
 
-## 1.2.0
+## O que ele gera
 
-- Cria o projeto e já abre `npm install`
-- Menu com `npm install` e Abrir pasta
-- JWT com `POST /api/auth/registrar` e `POST /api/auth/login`
-- Rotas novas entram sozinhas no `server.js`
-- Helmet, rate-limit, `/health`, `.env.example`
-- Projetos recentes na tela inicial
+- `server.js` com Helmet, CORS, rate-limit e `GET /health`
+- `.env` + `.env.example`
+- Camada de banco: MySQL, PostgreSQL ou Firebase
+- Rotas Express (GET/POST/PUT/DELETE), com ou sem `express-validator`
+- JWT: `POST /api/auth/registrar` e `POST /api/auth/login` + `usuarios.sql`
+- README e `.gitignore` do projeto novo
 
-## Abrir
+## Como usar
+
+1. Abra o NodePunch e clique em **Novo projeto**.
+2. Informe nome, pasta e banco.
+3. Espere o terminal de `npm install`.
+4. No menu do projeto: Model/Controller, Rota Express ou Autenticação JWT.
+5. `npm run dev` na pasta gerada. Health: `http://localhost:3000/health`.
+
+## Abrir o app
 
 ```bash
 dotnet restore
 dotnet run --project NodePunch.csproj
 ```
+
+Requer .NET 8 no Windows.
 
 MIT © André Rösler
