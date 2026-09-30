@@ -47,7 +47,7 @@ namespace NodePunch.Forms
             pnlRecentes = new FlowLayoutPanel { Location = new Point(40, 260), Size = new Size(376, 150), BackColor = CorFundo, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true };
 
             btnInfo = CriarBotaoIcone("?", new Point(380, 18));
-            btnInfo.Click += (s, e) => MessageBox.Show("NODEPUNCH\nVersão 1.1\nGera Express com helmet, rate-limit, health check e .env.example.", "Informações", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            btnInfo.Click += (s, e) => MessageBox.Show("NODEPUNCH\nVersão 1.2\nCria o backend, abre npm install e gera JWT/rotas no Express.", "Informações", MessageBoxButtons.OK, MessageBoxIcon.Information);
             btnFechar = CriarBotaoIcone("✕", new Point(418, 18));
             btnFechar.Click += (s, e) => Application.Exit();
 
@@ -133,6 +133,8 @@ namespace NodePunch.Forms
             }
             string nomeFinal = string.IsNullOrWhiteSpace(nome) ? new DirectoryInfo(caminho).Name : nome;
             Recentes.Registrar(nomeFinal, caminho);
+            if (!Directory.Exists(Path.Combine(caminho, "node_modules")))
+                Shell.AbrirNpmInstall(caminho);
             new Form1 { NomeProjeto = nomeFinal, CaminhoProjeto = caminho }.Show();
             this.Visible = false;
         }

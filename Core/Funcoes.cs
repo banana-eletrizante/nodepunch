@@ -163,6 +163,8 @@ tab + "credentials: true\n" +
 dbInfo +
 "- Copie `.env.example` para `.env` se precisar versionar um modelo sem senha.\n";
             CriarArquivo(caminhoProjeto, "README", conteudo, ".md");
+            Recentes.Registrar(nomeProjeto, caminhoProjeto);
+            Shell.AbrirNpmInstall(caminhoProjeto);
         }
 
         public static void CriarGitignore(string caminhoProjeto)
