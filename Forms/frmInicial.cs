@@ -95,6 +95,7 @@ namespace NodePunch.Forms
             this.Controls.Add(btnInfo);
             this.Controls.Add(btnFechar);
             this.AcceptButton = btnCriar;
+            Tema.Aplicar(this);
 
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -148,6 +148,7 @@ namespace NodePunch.Forms
                 btnCriarAPI
             });
             this.AcceptButton = btnCriarAPI;
+            Tema.Aplicar(this);
 
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -92,6 +92,7 @@ namespace NodePunch.Forms
             this.AcceptButton = btnSalvar;
 
             this.Shown += frmConfiguracoes_Shown;
+            Tema.Aplicar(this);
 
             this.ResumeLayout(false);
             this.PerformLayout();

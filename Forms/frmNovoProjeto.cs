@@ -106,6 +106,7 @@ namespace NodePunch.Forms
             this.AcceptButton = btnCriarProjeto;
 
             AtualizarCamposBanco();
+            Tema.Aplicar(this);
 
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -102,6 +102,7 @@ namespace NodePunch.Forms
                     lblDetectado.Text = "Banco detectado: " + tipo;
                 }
             };
+            Tema.Aplicar(this);
 
             this.ResumeLayout(false);
             this.PerformLayout();

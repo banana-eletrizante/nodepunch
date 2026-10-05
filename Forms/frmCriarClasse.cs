@@ -115,6 +115,7 @@ namespace NodePunch.Forms
                 btnCriarClasses
             });
             this.AcceptButton = btnCriarClasses;
+            Tema.Aplicar(this);
 
             this.ResumeLayout(false);
             this.PerformLayout();
