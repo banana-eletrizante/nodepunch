@@ -24,7 +24,9 @@ namespace NodePunch.Forms
 
         public frmCriarAuth()
         {
+            Tema.Preparar(this);
             InitializeComponent();
+            Tema.Dialogo(this, "Autenticação JWT", "Cadastro, login e proteção de rotas.", btnGerar);
         }
 
         private void InitializeComponent()
@@ -88,7 +90,7 @@ namespace NodePunch.Forms
             this.Text = "Gerar Autenticação JWT";
             this.Font = new Font("Segoe UI", 9f);
 
-            this.Controls.AddRange(new Control[] { pnlAccent, lblTitulo, lblInfo, lblDetectado, btnGerar });
+            this.Controls.AddRange(new Control[] { pnlAccent, lblInfo, lblDetectado, btnGerar });
 
             this.Shown += (s, e) =>
             {

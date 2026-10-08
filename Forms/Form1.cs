@@ -10,334 +10,114 @@ namespace NodePunch.Forms
     public class Form1 : Form
     {
         private TreeView arvore;
-        private MenuStrip menuStrip1;
-        private Label lblProjeto;
-        private Panel pnlSidebar;
-        private Panel pnlAccent;
-        private Panel pnlHeader;
-
-        // Cores — identidade JavaScript
-        private static readonly Color CorFundo = Color.FromArgb(18, 18, 18);
-        private static readonly Color CorSuperficie = Color.FromArgb(30, 30, 30);
-        private static readonly Color CorAmarelo = Color.FromArgb(247, 223, 30);   // #F7DF1E
-        private static readonly Color CorAmareloHover = Color.FromArgb(255, 229, 102);
-        private static readonly Color CorTextoSec = Color.FromArgb(160, 160, 160);
-        private static readonly Color CorBorda = Color.FromArgb(50, 50, 50);
-
+        private Label lblProjeto, lblCaminho, lblArquivo;
+        private RichTextBox previa;
+        private ToolStripStatusLabel status;
         public string NomeProjeto { get; set; }
         public string CaminhoProjeto { get; set; }
         public bool UsaBanco { get; set; }
+        public frmInicial TelaInicial { get; set; }
 
         public Form1()
         {
-            InitializeComponent();
-            this.Shown += Form1_Shown;
+            Tema.Preparar(this); IconHelper.AplicarIcone(this);
+            Text = "NodePunch • Projeto"; ClientSize = new Size(1180, 760);
+            MinimumSize = new Size(940, 650); StartPosition = FormStartPosition.CenterScreen;
+            BackColor = Tema.Fundo; ForeColor = Tema.Texto; Font = new Font("Segoe UI", 10f); KeyPreview = true;
+            var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, BackColor = Tema.Fundo };
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 100));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
+            var header = new Panel { Dock = DockStyle.Fill, Margin = Padding.Empty, BackColor = Tema.Superficie, Size = new Size(1180, 100) };
+            lblProjeto = new Label { Location = new Point(24, 17), Width = 680, Height = 33, AutoEllipsis = true, Font = new Font("Segoe UI Semibold", 20f), ForeColor = Tema.Texto };
+            lblCaminho = new Label { Location = new Point(25, 56), Width = 720, Height = 26, AutoEllipsis = true, ForeColor = Tema.Secundario };
+            var inicio = Tema.Botao("← Início", (s, e) => Close());
+            inicio.Size = new Size(110, 40); inicio.Location = new Point(1038, 27); inicio.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            header.Controls.AddRange(new Control[] { lblProjeto, lblCaminho, inicio }); layout.Controls.Add(header, 0, 0);
+            var explorador = new SplitContainer { Dock = DockStyle.Fill, Margin = Padding.Empty, BackColor = Tema.Borda, SplitterWidth = 6, Size = new Size(1180, 600), SplitterDistance = 280, Panel1MinSize = 200, Panel2MinSize = 500 };
+            explorador.Panel1.BackColor = Tema.Superficie;
+            var tituloArquivos = new Label { Text = "ARQUIVOS DO PROJETO", Dock = DockStyle.Top, Height = 46, Padding = new Padding(18, 17, 0, 0), ForeColor = Tema.Secundario, Font = new Font("Segoe UI Semibold", 9f) };
+            arvore = new TreeView { Dock = DockStyle.Fill, BackColor = Tema.Superficie, ForeColor = Tema.Texto, BorderStyle = BorderStyle.None, Font = new Font("Segoe UI", 10f), ItemHeight = 30, Indent = 20, ShowLines = false, FullRowSelect = true, HideSelection = false };
+            arvore.AfterSelect += (s, e) => MostrarArquivo(e.Node.Tag as string); arvore.KeyDown += Arvore_KeyDown;
+            explorador.Panel1.Controls.Add(arvore); explorador.Panel1.Controls.Add(tituloArquivos);
+            var conteudo = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, Padding = new Padding(24), BackColor = Tema.Fundo };
+            conteudo.RowStyles.Add(new RowStyle(SizeType.Absolute, 36)); conteudo.RowStyles.Add(new RowStyle(SizeType.Absolute, 168));
+            conteudo.RowStyles.Add(new RowStyle(SizeType.Absolute, 38)); conteudo.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            conteudo.Controls.Add(new Label { Text = "O que vamos construir?", AutoSize = true, Font = new Font("Segoe UI Semibold", 16f), ForeColor = Tema.Texto }, 0, 0);
+            var acoes = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = true, AutoScroll = true, Margin = Padding.Empty };
+            AdicionarAcao(acoes, "Model / Controller", "Estruture suas entidades", AbrirCriarClasse);
+            AdicionarAcao(acoes, "Rota Express", "Crie endpoints da API", AbrirCriarAPI);
+            AdicionarAcao(acoes, "Autenticação JWT", "Cadastro, login e proteção", AbrirCriarAuth);
+            AdicionarAcao(acoes, "Configurações", "Ambiente e origens CORS", AbrirConfiguracoes);
+            AdicionarAcao(acoes, "Visual Studio Code", "Continue no seu editor", AbrirVSCode);
+            AdicionarAcao(acoes, "Instalar dependências", "Abrir npm install", () => Shell.AbrirNpmInstall(CaminhoProjeto));
+            conteudo.Controls.Add(acoes, 0, 1);
+            lblArquivo = new Label { Text = "PRÉVIA DO ARQUIVO", Dock = DockStyle.Fill, ForeColor = Tema.Secundario, AutoEllipsis = true, Padding = new Padding(0, 10, 0, 0), Font = new Font("Segoe UI Semibold", 9f) };
+            conteudo.Controls.Add(lblArquivo, 0, 2);
+            previa = new RichTextBox { Dock = DockStyle.Fill, ReadOnly = true, BackColor = Tema.Superficie, ForeColor = Tema.Texto, BorderStyle = BorderStyle.None, Font = new Font("Consolas", 11f), WordWrap = false, DetectUrls = false, Text = "Selecione um arquivo à esquerda para consultar seu conteúdo.", AccessibleName = "Prévia do arquivo, somente leitura" };
+            conteudo.Controls.Add(previa, 0, 3); explorador.Panel2.Controls.Add(conteudo); layout.Controls.Add(explorador, 0, 1);
+            var rodape = new StatusStrip { Dock = DockStyle.Fill, BackColor = Tema.Superficie, SizingGrip = false };
+            status = new ToolStripStatusLabel { Text = "Pronto", ForeColor = Tema.Secundario, Spring = true, TextAlign = ContentAlignment.MiddleLeft };
+            rodape.Items.Add(status); layout.Controls.Add(rodape, 0, 2); Controls.Add(layout);
+            Shown += (s, e) => AtualizarArvore();
+            FormClosed += (s, e) => { if (TelaInicial != null && !TelaInicial.IsDisposed) { TelaInicial.Visible = true; TelaInicial.AtualizarRecentes(); } else Application.Exit(); };
+            KeyDown += (s, e) =>
+            {
+                if (e.Control && e.KeyCode == Keys.M) { AbrirCriarClasse(); e.Handled = true; }
+                else if (e.Control && e.KeyCode == Keys.R) { AbrirCriarAPI(); e.Handled = true; }
+                else if (e.Control && e.KeyCode == Keys.J) { AbrirCriarAuth(); e.Handled = true; }
+                else if (e.KeyCode == Keys.F5) { AtualizarArvore(); e.Handled = true; }
+            };
         }
-
-        private void InitializeComponent()
+        private static void AdicionarAcao(FlowLayoutPanel painel, string titulo, string descricao, Action acao)
         {
-            this.SuspendLayout();
-
-            IconHelper.AplicarIcone(this);
-
-            // ===== Menu =====
-            menuStrip1 = new MenuStrip
-            {
-                BackColor = CorSuperficie,
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI", 9.5f),
-                Renderer = new ToolStripProfessionalRenderer(new MenuCoresJS())
-            };
-
-            ToolStripMenuItem miCriarClasse = new ToolStripMenuItem("Model/Controller");
-            miCriarClasse.Click += (s, e) => AbrirCriarClasse();
-
-            ToolStripMenuItem miCriarAPI = new ToolStripMenuItem("Rota Express (API)");
-            miCriarAPI.Click += (s, e) => AbrirCriarAPI();
-
-            ToolStripMenuItem miCriarAuth = new ToolStripMenuItem("Autenticação JWT");
-            miCriarAuth.Click += (s, e) => AbrirCriarAuth();
-
-            ToolStripMenuItem miConfiguracoes = new ToolStripMenuItem("Configurações");
-            miConfiguracoes.Click += (s, e) => AbrirConfiguracoes();
-
-            ToolStripMenuItem miAbrirVSCode = new ToolStripMenuItem("Abrir no VSCode");
-            miAbrirVSCode.Click += (s, e) => AbrirVSCode();
-            miAbrirVSCode.Image = ObterIconeVSCode();
-            miAbrirVSCode.ImageScaling = ToolStripItemImageScaling.None;
-
-            ToolStripMenuItem miSair = new ToolStripMenuItem("Sair");
-            miSair.Click += (s, e) => Application.Exit();
-
-            // Cada item vira uma "aba" própria na barra, lado a lado, em vez de um dropdown único
-            menuStrip1.Items.AddRange(new ToolStripItem[]
-            {
-                miCriarClasse,
-                miCriarAPI,
-                miCriarAuth,
-                miConfiguracoes,
-                miAbrirVSCode,
-                miSair
-            });
-
-            foreach (ToolStripItem item in menuStrip1.Items)
-            {
-                item.ForeColor = Color.White;
-                item.Padding = new Padding(10, 4, 10, 4);
-            }
-
-            // ===== Header (nome do projeto + barra amarela) =====
-            pnlHeader = new Panel
-            {
-                Dock = DockStyle.Top,
-                Height = 48,
-                BackColor = CorSuperficie,
-                Padding = new Padding(12, 0, 12, 0)
-            };
-
-            lblProjeto = new Label
-            {
-                Text = "Projeto:",
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI Semibold", 11f, FontStyle.Bold),
-                AutoSize = true,
-                Location = new Point(16, 14),
-                BackColor = Color.Transparent
-            };
-
-            pnlAccent = new Panel
-            {
-                BackColor = CorAmarelo,
-                Height = 3,
-                Dock = DockStyle.Bottom
-            };
-
-            pnlHeader.Controls.Add(lblProjeto);
-            pnlHeader.Controls.Add(pnlAccent);
-
-            // ===== Sidebar com a árvore =====
-            pnlSidebar = new Panel
-            {
-                Dock = DockStyle.Left,
-                Width = 300,
-                BackColor = CorSuperficie,
-                Padding = new Padding(0)
-            };
-
-            Panel bordaSidebar = new Panel
-            {
-                Dock = DockStyle.Right,
-                Width = 1,
-                BackColor = CorBorda
-            };
-
-            arvore = new TreeView
-            {
-                Dock = DockStyle.Fill,
-                BackColor = CorSuperficie,
-                ForeColor = Color.White,
-                BorderStyle = BorderStyle.None,
-                Font = new Font("Segoe UI", 9.5f),
-                Indent = 22,
-                ItemHeight = 24,
-                ShowLines = true,
-                LineColor = CorBorda,
-                FullRowSelect = true,
-                HideSelection = false
-            };
-            arvore.KeyDown += Arvore_KeyDown;
-
-            arvore.AfterSelect += (s, e) => { };
-
-            pnlSidebar.Controls.Add(arvore);
-            pnlSidebar.Controls.Add(bordaSidebar);
-
-            // ===== Form =====
-            this.MainMenuStrip = menuStrip1;
-            this.Controls.Add(pnlSidebar);
-            this.Controls.Add(pnlHeader);
-            this.Controls.Add(menuStrip1);
-
-            this.ClientSize = new Size(1100, 650);
-            this.BackColor = CorFundo;
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.WindowState = FormWindowState.Maximized;
-            this.IsMdiContainer = true;
-            this.Text = "NodePunch";
-            this.Font = new Font("Segoe UI", 9f);
-            this.FormClosed += (s, e) => Application.Exit();
-
-            foreach (Control c in this.Controls)
-            {
-                if (c is MdiClient)
-                    c.BackColor = CorFundo;
-            }
-
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            painel.Controls.Add(new CartaoAcao(titulo, descricao, acao));
         }
-
-        protected override void OnLoad(EventArgs e)
+        internal void AtualizarArvore()
         {
-            base.OnLoad(e);
-            foreach (Control c in this.Controls)
-            {
-                if (c is MdiClient client)
-                {
-                    client.BackColor = CorFundo;
-                    break;
-                }
-            }
-        }
-
-        private void Form1_Shown(object sender, EventArgs e)
-        {
-            AtualizarArvore();
-        }
-
-        private void AtualizarArvore()
-        {
-            lblProjeto.Text = "Projeto: " + NomeProjeto;
-            Arvore.LoadDirectoryTree(CaminhoProjeto, arvore);
+            if (string.IsNullOrWhiteSpace(CaminhoProjeto) || !Directory.Exists(CaminhoProjeto)) return;
+            lblProjeto.Text = NomeProjeto ?? new DirectoryInfo(CaminhoProjeto).Name;
+            lblCaminho.Text = CaminhoProjeto; Text = "NodePunch • " + lblProjeto.Text;
+            arvore.BeginUpdate();
+            try { Arvore.LoadDirectoryTree(CaminhoProjeto, arvore); Arvore.ExpandirNos(arvore.Nodes); if (arvore.Nodes.Count > 0) arvore.Nodes[0].Expand(); }
+            finally { arvore.EndUpdate(); }
             UsaBanco = Funcoes.VerificaUsaBanco(CaminhoProjeto);
-            arvore.CollapseAll();
-            Arvore.ExpandirNos(arvore.Nodes);
-            if (arvore.Nodes.Count > 0) arvore.Nodes[0].Expand();
+            status.Text = "Banco: " + Funcoes.DetectarTipoBanco(CaminhoProjeto) + "   •   Ctrl+M: model   •   Ctrl+R: rota   •   Ctrl+J: JWT   •   F5: atualizar";
+            lblArquivo.Text = "PRÉVIA DO ARQUIVO";
+            previa.Text = "Selecione um arquivo à esquerda para visualizar seu conteúdo.";
         }
-
+        internal void MostrarArquivo(string caminho)
+        {
+            if (string.IsNullOrEmpty(caminho)) return;
+            lblArquivo.Text = File.Exists(caminho) ? Path.GetRelativePath(CaminhoProjeto, caminho) : "PRÉVIA DO ARQUIVO";
+            try
+            {
+                if (!File.Exists(caminho)) { previa.Text = "Selecione um arquivo dentro desta pasta."; return; }
+                string ext = Path.GetExtension(caminho).ToLowerInvariant();
+                if (new FileInfo(caminho).Length > 512 * 1024 || !(ext is ".js" or ".json" or ".md" or ".txt" or ".sql" or ".env" or ".example" or ""))
+                { previa.Text = "A prévia está disponível para arquivos de texto de até 512 KB. Abra outros arquivos no seu editor."; return; }
+                previa.Text = File.ReadAllText(caminho);
+            }
+            catch (Exception ex) { previa.Text = "Não foi possível ler o arquivo: " + ex.Message; }
+        }
         private void Arvore_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode != Keys.Delete) return;
-            if (arvore.SelectedNode == null) return;
-
-            if (MessageBox.Show(
-                    $"Deseja realmente excluir \"{arvore.SelectedNode.Text}\"?",
-                    "Confirmação",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question) == DialogResult.Yes)
-            {
-                Arvore.ExcluirItemSelecionado(arvore);
-            }
+            if (e.KeyCode != Keys.Delete || arvore.SelectedNode == null || arvore.SelectedNode.Parent == null) return;
+            if (MessageBox.Show(this, $"Excluir \"{arvore.SelectedNode.Text}\"? Esta ação não pode ser desfeita.", "Excluir item", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            { Arvore.ExcluirItemSelecionado(arvore); AtualizarArvore(); }
+            e.Handled = true;
         }
-
-        private void AbrirCriarClasse()
-        {
-            frmCriarClasse frm = new frmCriarClasse
-            {
-                MdiParent = this,
-                NomeProjeto = NomeProjeto,
-                CaminhoProjeto = CaminhoProjeto,
-                UsaBanco = UsaBanco
-            };
-            frm.ProjetoAtualizado += (s, e) => AtualizarArvore();
-            frm.Show();
-        }
-
-        private void AbrirCriarAPI()
-        {
-            frmCriarAPI frm = new frmCriarAPI
-            {
-                MdiParent = this,
-                NomeProjeto = NomeProjeto,
-                CaminhoProjeto = CaminhoProjeto,
-                UsaBanco = UsaBanco
-            };
-            frm.ProjetoAtualizado += (s, e) => AtualizarArvore();
-            frm.Show();
-        }
-
-        private void AbrirCriarAuth()
-        {
-            frmCriarAuth frm = new frmCriarAuth
-            {
-                MdiParent = this,
-                CaminhoProjeto = CaminhoProjeto
-            };
-            frm.ProjetoAtualizado += (s, e) => AtualizarArvore();
-            frm.Show();
-        }
-
-        private void AbrirConfiguracoes()
-        {
-            frmConfiguracoes frm = new frmConfiguracoes
-            {
-                MdiParent = this,
-                CaminhoProjeto = CaminhoProjeto
-            };
-            frm.Show();
-        }
-
-        private string CaminhoVSCode()
-        {
-            string caminhoVsc = @"C:\Program Files\Microsoft VS Code\Code.exe";
-            if (!File.Exists(caminhoVsc))
-            {
-                string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                caminhoVsc = Path.Combine(userProfile, @"AppData\Local\Programs\Microsoft VS Code\Code.exe");
-            }
-            return File.Exists(caminhoVsc) ? caminhoVsc : null;
-        }
-
-        private Image ObterIconeVSCode()
-        {
-            try
-            {
-                string caminho = CaminhoVSCode();
-                if (caminho == null) return null;
-
-                using Icon icone = Icon.ExtractAssociatedIcon(caminho);
-                return icone?.ToBitmap();
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
+        private void AbrirCriarClasse() { using var form = new frmCriarClasse { NomeProjeto = NomeProjeto, CaminhoProjeto = CaminhoProjeto, UsaBanco = UsaBanco }; form.ProjetoAtualizado += (s, e) => AtualizarArvore(); form.ShowDialog(this); }
+        private void AbrirCriarAPI() { using var form = new frmCriarAPI { NomeProjeto = NomeProjeto, CaminhoProjeto = CaminhoProjeto, UsaBanco = UsaBanco }; form.ProjetoAtualizado += (s, e) => AtualizarArvore(); form.ShowDialog(this); }
+        private void AbrirCriarAuth() { using var form = new frmCriarAuth { CaminhoProjeto = CaminhoProjeto }; form.ProjetoAtualizado += (s, e) => AtualizarArvore(); form.ShowDialog(this); }
+        private void AbrirConfiguracoes() { using var form = new frmConfiguracoes { CaminhoProjeto = CaminhoProjeto }; form.ShowDialog(this); }
         private void AbrirVSCode()
         {
-            string caminhoVsc = CaminhoVSCode();
-            if (caminhoVsc == null)
-            {
-                MessageBox.Show("Visual Studio Code não encontrado!");
-                return;
-            }
-            try
-            {
-                var inicio = new ProcessStartInfo(caminhoVsc) { UseShellExecute = false };
-                inicio.ArgumentList.Add(CaminhoProjeto);
-                Process.Start(inicio);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Erro ao abrir o VSCode: " + ex.Message);
-            }
+            string arquivo = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Microsoft VS Code", "Code.exe");
+            if (!File.Exists(arquivo)) arquivo = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft VS Code", "Code.exe");
+            if (!File.Exists(arquivo)) { MessageBox.Show(this, "Visual Studio Code não foi encontrado.", "Abrir editor"); return; }
+            try { var processo = new ProcessStartInfo(arquivo) { UseShellExecute = false }; processo.ArgumentList.Add(CaminhoProjeto); Process.Start(processo); }
+            catch (Exception ex) { MessageBox.Show(this, ex.Message, "Abrir editor"); }
         }
-    }
-
-    internal class MenuCoresJS : ProfessionalColorTable
-    {
-        private static readonly Color Superficie = Color.FromArgb(30, 30, 30);
-        private static readonly Color Amarelo = Color.FromArgb(247, 223, 30);
-        private static readonly Color Hover = Color.FromArgb(50, 50, 40);
-        private static readonly Color Borda = Color.FromArgb(60, 60, 60);
-
-        public override Color MenuBorder => Borda;
-        public override Color MenuItemBorder => Amarelo;
-        public override Color MenuItemSelected => Hover;
-        public override Color MenuItemSelectedGradientBegin => Hover;
-        public override Color MenuItemSelectedGradientEnd => Hover;
-        public override Color MenuItemPressedGradientBegin => Color.FromArgb(60, 60, 45);
-        public override Color MenuItemPressedGradientEnd => Color.FromArgb(60, 60, 45);
-        public override Color MenuStripGradientBegin => Superficie;
-        public override Color MenuStripGradientEnd => Superficie;
-        public override Color ToolStripDropDownBackground => Superficie;
-        public override Color ImageMarginGradientBegin => Superficie;
-        public override Color ImageMarginGradientMiddle => Superficie;
-        public override Color ImageMarginGradientEnd => Superficie;
-        public override Color SeparatorDark => Borda;
-        public override Color SeparatorLight => Borda;
-        public override Color StatusStripGradientBegin => Superficie;
-        public override Color StatusStripGradientEnd => Superficie;
     }
 }

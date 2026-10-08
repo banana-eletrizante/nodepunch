@@ -8,7 +8,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>NodePunch</RootNamespace>
     <AssemblyName>NodePunch</AssemblyName>
-    <Version>1.3.0</Version>
+    <Version>1.4.0</Version>
     <Authors>André Rösler</Authors>
     <Product>NodePunch</Product>
     <ApplicationIcon>Resources\nodepunch.ico</ApplicationIcon>

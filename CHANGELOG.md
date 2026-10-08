@@ -1,5 +1,18 @@
 # Histórico
 
+## 1.4.0
+
+- Painel de projeto com seis cartões de ação, títulos e descrições, no lugar da área MDI vazia.
+- Explorador com largura ajustável e prévia de arquivos de texto, incluindo `.env.example`.
+  A prévia é somente leitura e limita arquivos a 512 KB.
+- Paleta escura consistente, amarelo de destaque, contraste, espaçamento e cabeçalhos padronizados.
+- Tela inicial redimensionável e projetos recentes acessíveis pelo teclado.
+- Fechar o projeto retorna à tela inicial e atualiza os recentes.
+- Ferramentas abrem como diálogos centralizados, com Enter para confirmar e Escape para fechar.
+  Enter no editor de `.env` continua inserindo uma nova linha.
+- Atalhos Ctrl+N/Ctrl+O na tela inicial, Ctrl+M/Ctrl+R/Ctrl+J e F5 no projeto.
+- Escala de DPI por monitor e verificações de layout em 100% e 150%.
+
 ## 1.3.0
 
 - `.env` e `.env.example` também são gerados em projetos sem banco.

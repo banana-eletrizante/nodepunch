@@ -30,7 +30,9 @@ namespace NodePunch.Forms
         public frmInicial()
         {
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
+            Tema.Preparar(this);
             InitializeComponent();
+            AplicarLayout();
             CarregarRecentes();
         }
 
@@ -126,6 +128,37 @@ namespace NodePunch.Forms
             this.ResumeLayout(false);
         }
 
+        internal void AtualizarRecentes() => CarregarRecentes();
+
+        private void AplicarLayout()
+        {
+            ClientSize = new Size(760, 640);
+            MinimumSize = new Size(640, 560);
+            FormBorderStyle = FormBorderStyle.Sizable;
+            MaximizeBox = true;
+            BackColor = Tema.Fundo;
+            Tema.Aplicar(this);
+            pnlAccent.BackColor = Tema.Amarelo;
+            lblVersao.ForeColor = Tema.Fundo;
+            lblSub.ForeColor = Tema.Secundario;
+            lblRecentes.ForeColor = Tema.Secundario;
+            btnFechar.Visible = false;
+            btnInfo.Location = new Point(684, 28);
+            btnInfo.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnInfo.AccessibleName = "Sobre o NodePunch";
+            btnCriar.Size = new Size(260, 54);
+            btnAbrir.Location = new Point(316, 156);
+            btnAbrir.Size = new Size(220, 54);
+            btnCriar.TabIndex = 0; btnAbrir.TabIndex = 1; pnlCard.TabIndex = 2; btnInfo.TabIndex = 3;
+            pnlCard.Size = new Size(680, 372);
+            pnlCard.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            pnlRecentes.Size = new Size(656, 314);
+            pnlRecentes.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            pnlRecentes.SizeChanged += (s, e) => { foreach (Control item in pnlRecentes.Controls) item.Width = Math.Max(100, pnlRecentes.ClientSize.Width - 24); };
+            KeyPreview = true;
+            KeyDown += (s, e) => { if (e.Control && e.KeyCode == Keys.N) { btnCriar.PerformClick(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.O) { btnAbrir.PerformClick(); e.SuppressKeyPress = true; } };
+        }
+
         private void CarregarRecentes()
         {
             pnlRecentes.Controls.Clear();
@@ -146,40 +179,14 @@ namespace NodePunch.Forms
             {
                 var caminho = item.Caminho;
                 var nome = item.Nome;
-                var card = new Panel
-                {
-                    Width = 388,
-                    Height = 52,
-                    BackColor = Color.FromArgb(28, 28, 30),
-                    Cursor = Cursors.Hand,
-                    Margin = new Padding(0, 0, 0, 8)
-                };
-                var nomeLbl = new Label
-                {
-                    Text = nome,
-                    ForeColor = Color.White,
-                    Font = new Font("Segoe UI Semibold", 10f),
-                    AutoSize = true,
-                    Location = new Point(14, 8),
-                    BackColor = Color.Transparent
-                };
-                var pathLbl = new Label
-                {
-                    Text = Encurtar(caminho),
-                    ForeColor = CorTextoSec,
-                    Font = new Font("Segoe UI", 8f),
-                    AutoSize = true,
-                    Location = new Point(14, 28),
-                    BackColor = Color.Transparent
-                };
-                card.Controls.Add(nomeLbl);
-                card.Controls.Add(pathLbl);
-                EventHandler abrir = (s, e) => AbrirCaminho(caminho, nome);
-                card.Click += abrir;
-                nomeLbl.Click += abrir;
-                pathLbl.Click += abrir;
-                card.MouseEnter += (s, e) => card.BackColor = Color.FromArgb(40, 38, 20);
-                card.MouseLeave += (s, e) => card.BackColor = Color.FromArgb(28, 28, 30);
+                var card = Tema.Botao(nome + "\n" + Encurtar(caminho), (s, e) => AbrirCaminho(caminho, nome));
+                card.Width = pnlRecentes.ClientSize.Width - 24;
+                card.Height = 66;
+                card.TextAlign = ContentAlignment.MiddleLeft;
+                card.Padding = new Padding(14, 4, 14, 4);
+                card.Margin = new Padding(0, 0, 0, 10);
+                card.AutoEllipsis = true;
+                card.AccessibleName = nome + ", " + caminho;
                 pnlRecentes.Controls.Add(card);
             }
         }
@@ -247,7 +254,7 @@ namespace NodePunch.Forms
 
         private void btnCriar_Click(object sender, EventArgs e)
         {
-            new frmNovoProjeto { Inicial = this }.Show();
+            new frmNovoProjeto { Inicial = this }.Show(this);
             this.Visible = false;
         }
 
@@ -283,7 +290,7 @@ namespace NodePunch.Forms
                 "As dependências do backend ainda não estão instaladas. Abrir npm install agora?",
                 "Dependências do projeto", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 Shell.AbrirNpmInstall(caminho);
-            new Form1 { NomeProjeto = nomeFinal, CaminhoProjeto = caminho }.Show();
+            new Form1 { NomeProjeto = nomeFinal, CaminhoProjeto = caminho, TelaInicial = this }.Show();
             this.Visible = false;
         }
     }

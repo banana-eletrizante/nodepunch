@@ -30,7 +30,9 @@ namespace NodePunch.Forms
 
         public frmCriarAPI()
         {
+            Tema.Preparar(this);
             InitializeComponent();
+            Tema.Dialogo(this, "Rota Express", "Escolha os métodos e a validação da rota.", btnCriarAPI);
         }
 
         private void InitializeComponent()
@@ -59,7 +61,7 @@ namespace NodePunch.Forms
             txtNomeAPI = new TextBox
             {
                 Location = new Point(24, 48),
-                Size = new Size(292, 28),
+                Size = new Size(412, 28),
                 BackColor = CorSuperficie,
                 ForeColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
@@ -104,7 +106,7 @@ namespace NodePunch.Forms
             txtCampos = new TextBox
             {
                 Location = new Point(24, 198),
-                Size = new Size(292, 26),
+                Size = new Size(412, 26),
                 BackColor = CorSuperficie,
                 ForeColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
@@ -116,7 +118,7 @@ namespace NodePunch.Forms
             btnCriarAPI = new Button
             {
                 Text = "Criar Rota",
-                Location = new Point(156, 234),
+                Location = new Point(276, 234),
                 Size = new Size(160, 44),
                 BackColor = CorAmarelo,
                 ForeColor = Color.Black,
@@ -130,7 +132,7 @@ namespace NodePunch.Forms
             btnCriarAPI.FlatAppearance.MouseDownBackColor = Color.FromArgb(230, 200, 20);
             btnCriarAPI.Click += btnCriarAPI_Click;
 
-            this.ClientSize = new Size(340, 300);
+            this.ClientSize = new Size(460, 300);
             this.BackColor = CorFundo;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;

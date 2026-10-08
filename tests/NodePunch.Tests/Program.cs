@@ -1,6 +1,8 @@
 using System.Text.Json.Nodes;
 using NodePunch.Core;
 using NodePunch.Forms;
+using System.Drawing;
+using System.Windows.Forms;
 
 internal static class Program
 {
@@ -112,12 +114,55 @@ internal static class Program
         Check(Funcoes.GerarAuthJWT(legacy, TipoBanco.MySQL), "auth works with old generated MySQL projects");
         Check(File.ReadAllText(legacyBanco).Contains("static async consultarSql("), "legacy MySQL adapter upgraded");
 
-        // Construct all Windows Forms without showing windows or invoking npm.
+        // Exercise layout and keyboard behavior without opening windows or invoking npm.
         foreach (var form in new System.Windows.Forms.Form[] { new frmInicial(), new frmNovoProjeto(), new Form1(), new frmCriarAPI(), new frmCriarAuth(), new frmCriarClasse(), new frmConfiguracoes() })
         {
             Check(form.Controls.Count > 0, "form initializes: " + form.GetType().Name);
+            Check(form.AutoScaleMode == AutoScaleMode.Dpi, "DPI scaling: " + form.GetType().Name);
+            if (form is not frmInicial && form is not Form1)
+            {
+                Check(form.AcceptButton != null && ((Button)form.AcceptButton).TabStop, "keyboard submit: " + form.GetType().Name);
+                form.PerformLayout();
+                Check(form.Controls.Cast<Control>().Where(c => c.Dock == DockStyle.None).All(c => c.Right <= form.ClientSize.Width && c.Bottom <= form.ClientSize.Height), "dialog controls fit: " + form.GetType().Name);
+                form.Scale(new SizeF(1.5f, 1.5f));
+                form.PerformLayout();
+                Check(form.Controls.Cast<Control>().Where(c => c.Dock == DockStyle.None).All(c => c.Right <= form.ClientSize.Width && c.Bottom <= form.ClientSize.Height), "dialog controls fit at 150%: " + form.GetType().Name);
+            }
             form.Dispose();
         }
+        using (var workspace = new Form1 { NomeProjeto = "Teste", CaminhoProjeto = exemploDir })
+        {
+            workspace.AtualizarArvore();
+            var controls = Descendentes(workspace).ToList();
+            var preview = controls.OfType<RichTextBox>().Single();
+            Check(preview.ReadOnly && !preview.DetectUrls, "preview is read-only and doesn't activate links");
+            workspace.MostrarArquivo(Path.Combine(exemploDir, "server.js"));
+            Check(preview.Text.Contains("express"), "preview reads the selected text file");
+            workspace.MostrarArquivo(Path.Combine(exemploDir, ".env.example"));
+            Check(preview.Text == File.ReadAllText(Path.Combine(exemploDir, ".env.example")), "preview supports env example");
+            string large = Path.Combine(exemploDir, "large.txt");
+            File.WriteAllText(large, new string('x', 513 * 1024));
+            workspace.MostrarArquivo(large);
+            Check(preview.Text.Contains("512 KB"), "large files don't block the preview");
+            workspace.MostrarArquivo(exemploDir);
+            Check(preview.Text.Contains("dentro desta pasta"), "selecting a folder clears stale content");
+            workspace.AtualizarArvore();
+            Check(preview.Text.StartsWith("Selecione"), "refresh clears stale preview");
+            workspace.Size = workspace.MinimumSize;
+            workspace.PerformLayout();
+            var split = controls.OfType<SplitContainer>().Single();
+            Check(split.Panel1.Width >= split.Panel1MinSize && split.Panel2.Width >= split.Panel2MinSize, "resizable explorer fits minimum workspace");
+            Check(controls.OfType<CartaoAcao>().Count() == 6 && controls.OfType<CartaoAcao>().All(c => c.TabStop), "all six tools are keyboard accessible");
+        }
         Console.WriteLine($"Passed {checks} checks. Generated backends: {root}");
+    }
+
+    private static IEnumerable<Control> Descendentes(Control control)
+    {
+        foreach (Control child in control.Controls)
+        {
+            yield return child;
+            foreach (var descendant in Descendentes(child)) yield return descendant;
+        }
     }
 }

@@ -36,7 +36,9 @@ namespace NodePunch.Forms
 
         public frmNovoProjeto()
         {
+            Tema.Preparar(this);
             InitializeComponent();
+            Tema.Dialogo(this, "Novo projeto", "Configure a pasta e o banco do seu backend.", btnCriarProjeto);
             this.FormClosed += (s, e) => { if (!IcCriou && Inicial != null) Inicial.Visible = true; };
         }
 
@@ -449,6 +451,7 @@ namespace NodePunch.Forms
                 Form1 form = new Form1
                 {
                     NomeProjeto = txtNomeProjeto.Text,
+                    TelaInicial = Inicial,
                     CaminhoProjeto = caminhoProjeto,
                     UsaBanco = tipo != TipoBanco.Nenhum
                 };

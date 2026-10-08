@@ -25,7 +25,9 @@ namespace NodePunch.Forms
 
         public frmConfiguracoes()
         {
+            Tema.Preparar(this);
             InitializeComponent();
+            Tema.Dialogo(this, "Configurações", "Ajuste as origens e o ambiente do projeto.", btnSalvar);
         }
 
         private void InitializeComponent()
@@ -50,6 +52,7 @@ namespace NodePunch.Forms
                 Location = new Point(24, 212),
                 Size = new Size(452, 180),
                 Multiline = true,
+                AcceptsReturn = true,
                 ScrollBars = ScrollBars.Vertical,
                 BackColor = CorSuperficie,
                 ForeColor = Color.White,
@@ -83,7 +86,7 @@ namespace NodePunch.Forms
 
             this.Controls.AddRange(new Control[]
             {
-                pnlAccent, lblTitulo,
+                pnlAccent,
                 lblCorsDev, txtOrigensDev,
                 lblCorsProd, txtOrigensProd,
                 lblEnv, txtEnv,

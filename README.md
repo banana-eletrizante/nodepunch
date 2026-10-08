@@ -20,8 +20,18 @@ Site: [andre-rosler.com/projetos](https://andre-rosler.com/projetos)
 1. Abra o NodePunch e clique em **Novo projeto**.
 2. Informe nome, pasta e banco.
 3. Marque a opção de instalar dependências ou rode `npm install` na pasta gerada.
-4. No menu do projeto: Model/Controller, Rota Express ou Autenticação JWT.
+4. Nos cartões do projeto: Model/Controller, Rota Express ou Autenticação JWT.
 5. `npm run dev` na pasta gerada. Health: `http://localhost:3000/health`.
+
+Selecione um arquivo no explorador para consultar a prévia. Arraste a divisória para
+ajustar a largura da árvore. O botão **Início** retorna à lista de projetos recentes.
+
+| Atalho | Ação |
+| --- | --- |
+| Ctrl+N / Ctrl+O | Novo projeto / abrir pasta na tela inicial |
+| Ctrl+M / Ctrl+R / Ctrl+J | Model / rota / autenticação no projeto |
+| F5 | Atualizar arquivos do projeto |
+| Escape | Fechar um formulário |
 
 ## Abrir o app
 

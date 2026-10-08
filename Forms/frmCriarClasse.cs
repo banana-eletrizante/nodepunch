@@ -32,7 +32,9 @@ namespace NodePunch.Forms
 
         public frmCriarClasse()
         {
+            Tema.Preparar(this);
             InitializeComponent();
+            Tema.Dialogo(this, "Model e Controller", "Defina a entidade e suas propriedades.", btnCriarClasses);
             this.Shown += (s, e) =>
             {
                 chkModelBanco.Visible = UsaBanco;
