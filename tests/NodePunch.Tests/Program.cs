@@ -23,6 +23,22 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        // Render an isolated form for design review without opening or capturing a desktop window.
+        if (args.Length == 2 && (args[0] == "--preview" || args[0] == "--preview-workspace"))
+        {
+            using Form form = args[0] == "--preview" ? new frmInicial() : new Form1();
+            using var layout = form.Controls[0];
+            form.Controls.Remove(layout);
+            layout.Dock = DockStyle.None;
+            layout.Size = form.ClientSize;
+            layout.CreateControl();
+            foreach (var control in Descendentes(layout)) control.CreateControl();
+            layout.PerformLayout();
+            using var bitmap = new Bitmap(layout.Width, layout.Height);
+            layout.DrawToBitmap(bitmap, new Rectangle(Point.Empty, layout.Size));
+            bitmap.Save(Path.GetFullPath(args[1]), System.Drawing.Imaging.ImageFormat.Png);
+            return;
+        }
         string root = Path.Combine(Path.GetFullPath(args.Length > 0 ? args[0] : "generated-tests"), "run-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         Check(!Funcoes.EhIdentificadorJS("123usuario"), "identifier cannot begin with digit");

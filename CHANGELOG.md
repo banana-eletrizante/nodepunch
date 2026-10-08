@@ -1,5 +1,13 @@
 # Histórico
 
+## 1.6.0
+
+- Identidade minimalista centrada no ícone original do punho amarelo, reutilizado sem alterações nos cabeçalhos e projetos recentes.
+- Tela inicial com tipografia e espaçamento revistos; remoção da ilustração de nós e dos selos NP.
+- Ferramentas com ícones de linha desenhados para cada ação e destaque amarelo no foco e no hover.
+- Paleta mais contida nos controles, com separadores discretos e menos elementos decorativos.
+- Prévia de layout reproduzível no projeto de testes, sem abrir janelas do aplicativo.
+
 ## 1.5.0
 
 - Nova tela inicial com composição exclusiva NodePunch, assinatura do autor e rede de nós desenhada em vetor.

@@ -44,14 +44,14 @@ namespace NodePunch.Forms
             var conteudo = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, Padding = new Padding(24), BackColor = Tema.Fundo };
             conteudo.RowStyles.Add(new RowStyle(SizeType.Absolute, 42)); conteudo.RowStyles.Add(new RowStyle(SizeType.Absolute, 200));
             conteudo.RowStyles.Add(new RowStyle(SizeType.Absolute, 38)); conteudo.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            conteudo.Controls.Add(new Label { Text = "O que vamos construir?", AutoSize = true, Font = new Font("Segoe UI Semibold", 16f), ForeColor = Tema.Texto }, 0, 0);
+            conteudo.Controls.Add(new Label { Text = "Ferramentas do projeto", AutoSize = true, Font = new Font("Segoe UI Semibold", 16f), ForeColor = Tema.Texto }, 0, 0);
             var acoes = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = true, AutoScroll = true, Margin = Padding.Empty };
-            AdicionarAcao(acoes, "Model / Controller", "Estruture suas entidades • Ctrl+M", AbrirCriarClasse, "{ }", Tema.Amarelo);
-            AdicionarAcao(acoes, "Rota Express", "Crie endpoints da API • Ctrl+R", AbrirCriarAPI, "API", Color.FromArgb(113, 193, 255));
-            AdicionarAcao(acoes, "Autenticação JWT", "Cadastro e login • Ctrl+J", AbrirCriarAuth, "JWT", Color.FromArgb(118, 222, 172));
-            AdicionarAcao(acoes, "Configurações", "Ambiente e origens CORS", AbrirConfiguracoes, "ENV", Color.FromArgb(197, 164, 255));
-            AdicionarAcao(acoes, "Visual Studio Code", "Continue no seu editor", AbrirVSCode, ">_", Color.FromArgb(113, 193, 255));
-            AdicionarAcao(acoes, "Dependências", "Instalar pacotes com npm", () => Shell.AbrirNpmInstall(CaminhoProjeto), "npm", Color.FromArgb(255, 184, 117));
+            AdicionarAcao(acoes, "Model / Controller", "Estruture suas entidades • Ctrl+M", AbrirCriarClasse, "{ }");
+            AdicionarAcao(acoes, "Rota Express", "Crie endpoints da API • Ctrl+R", AbrirCriarAPI, "API");
+            AdicionarAcao(acoes, "Autenticação JWT", "Cadastro e login • Ctrl+J", AbrirCriarAuth, "JWT");
+            AdicionarAcao(acoes, "Configurações", "Ambiente e origens CORS", AbrirConfiguracoes, "ENV");
+            AdicionarAcao(acoes, "Visual Studio Code", "Continue no seu editor", AbrirVSCode, ">_");
+            AdicionarAcao(acoes, "Dependências", "Instalar pacotes com npm", () => Shell.AbrirNpmInstall(CaminhoProjeto), "npm");
             conteudo.Controls.Add(acoes, 0, 1);
             lblArquivo = new Label { Text = "PRÉVIA DO ARQUIVO", Dock = DockStyle.Fill, ForeColor = Tema.Secundario, AutoEllipsis = true, Padding = new Padding(0, 10, 0, 0), Font = new Font("Segoe UI Semibold", 9f) };
             var barraPrevia = new Panel { Dock = DockStyle.Fill, Margin = Padding.Empty };
@@ -73,9 +73,9 @@ namespace NodePunch.Forms
                 else if (e.KeyCode == Keys.F5) { AtualizarArvore(); e.Handled = true; }
             };
         }
-        private static void AdicionarAcao(FlowLayoutPanel painel, string titulo, string descricao, Action acao, string simbolo, Color destaque)
+        private static void AdicionarAcao(FlowLayoutPanel painel, string titulo, string descricao, Action acao, string simbolo)
         {
-            painel.Controls.Add(new CartaoAcao(titulo, descricao, acao, simbolo, destaque));
+            painel.Controls.Add(new CartaoAcao(titulo, descricao, acao, simbolo));
         }
         internal void AtualizarArvore()
         {

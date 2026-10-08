@@ -26,24 +26,23 @@ namespace NodePunch.Forms
             raiz.RowStyles.Add(new RowStyle(SizeType.Absolute, 242));
             raiz.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             raiz.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
-            var hero = new PainelMarca { Dock = DockStyle.Fill, Margin = Padding.Empty, MostrarRede = true, Size = new Size(940, 242) };
-            hero.Controls.Add(new Label { Text = "NODEPUNCH  /  BACKEND STUDIO", AutoSize = true, Location = new Point(32, 26), Font = new Font("Consolas", 10f, FontStyle.Bold), ForeColor = Tema.Amarelo, BackColor = Color.Transparent });
-            hero.Controls.Add(new Label { Text = "Seu backend começa aqui.", AutoSize = true, Location = new Point(29, 64), Font = new Font("Segoe UI Semibold", 25f), ForeColor = Tema.Texto, BackColor = Color.Transparent });
-            hero.Controls.Add(new Label { Text = "Transforme suas ideias em uma API. Um projeto de cada vez.", Location = new Point(32, 119), Size = new Size(548, 26), AutoEllipsis = true, ForeColor = Tema.Secundario, BackColor = Color.Transparent });
-            var versao = new Label { Text = "v" + Application.ProductVersion.Split('+')[0], Location = new Point(834, 26), Size = new Size(74, 24), TextAlign = ContentAlignment.MiddleCenter, ForeColor = Tema.Amarelo, BackColor = Tema.Campo, Font = new Font("Consolas", 9f), Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            var hero = new PainelMarca { Dock = DockStyle.Fill, Margin = Padding.Empty, Destaque = true, Size = new Size(940, 242) };
+            hero.Controls.Add(new Label { Text = "NodePunch", AutoSize = true, Location = new Point(102, 25), Font = new Font("Segoe UI Semibold", 32f), ForeColor = Tema.Texto, BackColor = Color.Transparent });
+            hero.Controls.Add(new Label { Text = "Crie, abra e evolua seus backends.", Location = new Point(107, 89), Size = new Size(420, 26), AutoEllipsis = true, ForeColor = Tema.Secundario, BackColor = Color.Transparent });
+            var versao = new Label { Text = "v" + typeof(frmInicial).Assembly.GetName().Version.ToString(3), Location = new Point(834, 26), Size = new Size(74, 24), TextAlign = ContentAlignment.MiddleCenter, ForeColor = Tema.Secundario, BackColor = Tema.Fundo, Font = new Font("Consolas", 9f), Anchor = AnchorStyles.Top | AnchorStyles.Right };
             hero.Controls.Add(versao);
             btnCriar = Tema.Botao("+  Novo projeto", btnCriar_Click, true);
-            btnCriar.Location = new Point(32, 167); btnCriar.Size = new Size(220, 48); btnCriar.TabIndex = 0;
+            btnCriar.Location = new Point(32, 156); btnCriar.Size = new Size(220, 48); btnCriar.TabIndex = 0;
             btnAbrir = Tema.Botao("Abrir projeto  ↗", btnAbrir_Click);
-            btnAbrir.Location = new Point(266, 167); btnAbrir.Size = new Size(200, 48); btnAbrir.TabIndex = 1;
+            btnAbrir.Location = new Point(266, 156); btnAbrir.Size = new Size(200, 48); btnAbrir.TabIndex = 1;
             hero.Controls.AddRange(new Control[] { btnCriar, btnAbrir });
             raiz.Controls.Add(hero, 0, 0);
             var recentes = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 2, ColumnCount = 1, Padding = new Padding(32, 22, 32, 16), Margin = Padding.Empty };
             recentes.RowStyles.Add(new RowStyle(SizeType.Absolute, 52));
             recentes.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             var titulo = new Panel { Dock = DockStyle.Fill, Margin = Padding.Empty, Size = new Size(876, 52) };
-            titulo.Controls.Add(new Label { Text = "Continue de onde parou", AutoSize = true, Font = new Font("Segoe UI Semibold", 16f), ForeColor = Tema.Texto });
-            lblQuantidade = new Label { Text = "PROJETOS RECENTES", Dock = DockStyle.Right, Width = 180, TextAlign = ContentAlignment.TopRight, Padding = new Padding(0, 9, 0, 0), Font = new Font("Consolas", 8.5f), ForeColor = Tema.Secundario };
+            titulo.Controls.Add(new Label { Text = "Seus projetos", AutoSize = true, Font = new Font("Segoe UI Semibold", 16f), ForeColor = Tema.Texto });
+            lblQuantidade = new Label { Text = "RECENTES", Dock = DockStyle.Right, Width = 180, TextAlign = ContentAlignment.TopRight, Padding = new Padding(0, 9, 0, 0), Font = new Font("Consolas", 8.5f), ForeColor = Tema.Secundario };
             titulo.Controls.Add(lblQuantidade);
             recentes.Controls.Add(titulo, 0, 0);
             pnlRecentes = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true, Margin = Padding.Empty };
@@ -52,7 +51,7 @@ namespace NodePunch.Forms
             raiz.Controls.Add(recentes, 0, 1);
             var rodape = new Panel { Dock = DockStyle.Fill, Margin = Padding.Empty, BackColor = Tema.Superficie, Size = new Size(940, 40) };
             rodape.Controls.Add(new Label { Text = "Ctrl+N  novo projeto     Ctrl+O  abrir projeto", AutoSize = true, Location = new Point(32, 12), ForeColor = Tema.Secundario, Font = new Font("Consolas", 8.5f) });
-            var sobre = Tema.Botao("André Rösler • NodePunch", (s, e) => MessageBox.Show(this, "NODEPUNCH " + Application.ProductVersion.Split('+')[0] + "\n\nDo primeiro nó à sua próxima API.\nExpress • MySQL • PostgreSQL • Firebase\n\nandre-rosler.com", "Sobre o NodePunch", MessageBoxButtons.OK, MessageBoxIcon.Information));
+            var sobre = Tema.Botao("André Rösler • NodePunch", (s, e) => MessageBox.Show(this, "NODEPUNCH " + typeof(frmInicial).Assembly.GetName().Version.ToString(3) + "\n\nDo primeiro nó à sua próxima API.\nExpress • MySQL • PostgreSQL • Firebase\n\nandre-rosler.com", "Sobre o NodePunch", MessageBoxButtons.OK, MessageBoxIcon.Information));
             sobre.Size = new Size(208, 30); sobre.Location = new Point(700, 5); sobre.Anchor = AnchorStyles.Top | AnchorStyles.Right; sobre.FlatAppearance.BorderSize = 0; sobre.BackColor = Tema.Superficie;
             rodape.Controls.Add(sobre); raiz.Controls.Add(rodape, 0, 2);
             Controls.Add(raiz);
@@ -71,12 +70,12 @@ namespace NodePunch.Forms
         {
             while (pnlRecentes.Controls.Count > 0) pnlRecentes.Controls[0].Dispose();
             var items = Recentes.Listar();
-            lblQuantidade.Text = items.Count == 0 ? "PROJETOS RECENTES" : items.Count + " PROJETO" + (items.Count == 1 ? "" : "S");
+            lblQuantidade.Text = items.Count == 0 ? "RECENTES" : items.Count + " PROJETO" + (items.Count == 1 ? "" : "S");
             if (items.Count == 0)
             {
                 var vazio = new Panel { Height = 150, BackColor = Tema.Superficie, Padding = new Padding(24) };
-                vazio.Controls.Add(new Label { Text = "{ }", AutoSize = true, Location = new Point(24, 22), Font = new Font("Consolas", 21f, FontStyle.Bold), ForeColor = Tema.Amarelo });
-                vazio.Controls.Add(new Label { Text = "O próximo projeto pode ser o seu melhor.", AutoSize = true, Location = new Point(24, 72), Font = new Font("Segoe UI Semibold", 12f), ForeColor = Tema.Texto });
+                vazio.Controls.Add(new Label { Text = "+", AutoSize = true, Location = new Point(24, 22), Font = new Font("Consolas", 21f, FontStyle.Bold), ForeColor = Tema.Amarelo });
+                vazio.Controls.Add(new Label { Text = "Seu primeiro projeto começa aqui.", AutoSize = true, Location = new Point(24, 72), Font = new Font("Segoe UI Semibold", 12f), ForeColor = Tema.Texto });
                 vazio.Controls.Add(new Label { Text = "Crie um backend novo ou abra uma pasta para começar.", AutoSize = true, Location = new Point(24, 104), ForeColor = Tema.Secundario, Font = new Font("Segoe UI", 9f) });
                 pnlRecentes.Controls.Add(vazio);
             }
