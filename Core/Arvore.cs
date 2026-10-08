@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace NodePunch.Core
@@ -39,7 +40,15 @@ namespace NodePunch.Core
                 foreach (string file in files)
                 {
                     FileInfo fi = new FileInfo(file);
-                    TreeNode child = new TreeNode(fi.Name) { Tag = file };
+                    TreeNode child = new TreeNode(fi.Name) { Tag = file, ToolTipText = file };
+                    child.ForeColor = fi.Extension.ToLowerInvariant() switch
+                    {
+                        ".js" => Tema.Amarelo,
+                        ".json" => Color.FromArgb(113, 193, 255),
+                        ".sql" => Color.FromArgb(197, 164, 255),
+                        ".env" or ".example" => Color.FromArgb(118, 222, 172),
+                        _ => Tema.Texto
+                    };
                     node.Nodes.Add(child);
                 }
             }

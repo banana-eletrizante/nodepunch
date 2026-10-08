@@ -154,6 +154,28 @@ internal static class Program
             Check(split.Panel1.Width >= split.Panel1MinSize && split.Panel2.Width >= split.Panel2MinSize, "resizable explorer fits minimum workspace");
             Check(controls.OfType<CartaoAcao>().Count() == 6 && controls.OfType<CartaoAcao>().All(c => c.TabStop), "all six tools are keyboard accessible");
         }
+        using (var editor = new RichTextBox { ReadOnly = true })
+        {
+            string codigo = "const endpoint = 'https://api.test'; // comentario\nreturn 42;";
+            editor.Text = codigo;
+            RealceCodigo.Aplicar(editor, ".js");
+            Check(editor.Text == codigo && editor.ReadOnly, "highlighting preserves file contents and read-only state");
+            editor.Select(0, 5);
+            Check(editor.SelectionColor != Tema.Texto, "JavaScript keyword is highlighted");
+            editor.Select(codigo.IndexOf("https://"), 5);
+            Check(editor.SelectionColor == Color.FromArgb(118, 222, 172), "URL inside string is not mistaken for comment");
+            editor.Select(codigo.IndexOf("// comentario"), 5);
+            Check(editor.SelectionColor == Tema.Secundario, "JavaScript comment is muted");
+            editor.Text = new string('x', 40001);
+            RealceCodigo.Aplicar(editor, ".js");
+            Check(editor.SelectionStart == 0 && editor.SelectionColor == Tema.Texto, "large preview remains plain text");
+        }
+        using (var home = new frmInicial())
+        {
+            home.Size = home.MinimumSize; home.PerformLayout();
+            var hero = Descendentes(home).OfType<PainelMarca>().Single();
+            Check(hero.Controls.Cast<Control>().All(c => c.Right <= hero.Width && c.Bottom <= hero.Height), "home hero fits minimum window");
+        }
         Console.WriteLine($"Passed {checks} checks. Generated backends: {root}");
     }
 

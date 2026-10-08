@@ -23,7 +23,8 @@ Site: [andre-rosler.com/projetos](https://andre-rosler.com/projetos)
 4. Nos cartões do projeto: Model/Controller, Rota Express ou Autenticação JWT.
 5. `npm run dev` na pasta gerada. Health: `http://localhost:3000/health`.
 
-Selecione um arquivo no explorador para consultar a prévia. Arraste a divisória para
+Selecione um arquivo no explorador para consultar a prévia com realce de código,
+tipo, tamanho e número de linhas. Arraste a divisória para
 ajustar a largura da árvore. O botão **Início** retorna à lista de projetos recentes.
 
 | Atalho | Ação |

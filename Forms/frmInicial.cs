@@ -8,248 +8,86 @@ namespace NodePunch.Forms
 {
     public class frmInicial : Form
     {
-        private Button btnCriar;
-        private Button btnAbrir;
-        private Button btnInfo;
-        private Button btnFechar;
-        private Label lblTitulo;
-        private Label lblSub;
-        private Label lblVersao;
-        private Label lblRecentes;
+        private Button btnCriar, btnAbrir;
         private FlowLayoutPanel pnlRecentes;
-        private Panel pnlAccent;
-        private Panel pnlCard;
-
-        private static readonly Color CorFundo = Color.FromArgb(12, 12, 14);
-        private static readonly Color CorCard = Color.FromArgb(22, 22, 24);
-        private static readonly Color CorAmarelo = Color.FromArgb(247, 223, 30);
-        private static readonly Color CorAmareloHover = Color.FromArgb(255, 229, 102);
-        private static readonly Color CorTextoSec = Color.FromArgb(168, 168, 172);
-        private static readonly Color CorBorda = Color.FromArgb(48, 48, 52);
+        private Label lblQuantidade;
 
         public frmInicial()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
             Tema.Preparar(this);
-            InitializeComponent();
-            AplicarLayout();
-            CarregarRecentes();
-        }
-
-        private void InitializeComponent()
-        {
-            this.SuspendLayout();
             IconHelper.AplicarIcone(this);
-
-            pnlAccent = new Panel { BackColor = CorAmarelo, Dock = DockStyle.Top, Height = 3 };
-
-            lblVersao = new Label
-            {
-                Text = "v" + Application.ProductVersion.Split('+')[0],
-                Font = new Font("Segoe UI Semibold", 8f),
-                ForeColor = Color.Black,
-                BackColor = CorAmarelo,
-                AutoSize = true,
-                Location = new Point(40, 28),
-                Padding = new Padding(8, 2, 8, 2)
-            };
-
-            btnInfo = CriarBotaoIcone("?", new Point(428, 22));
-            btnInfo.Click += (s, e) => MessageBox.Show(
-                "NODEPUNCH " + Application.ProductVersion.Split('+')[0] + "\n\nGera um backend Express com:\n• helmet, rate-limit e /health\n• JWT (registrar / login)\n• MySQL, PostgreSQL ou Firebase\n• npm install opcional para o backend\n\nandre-rosler.com",
-                "NodePunch", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            btnFechar = CriarBotaoIcone("✕", new Point(468, 22));
-            btnFechar.Click += (s, e) => Application.Exit();
-
-            lblTitulo = new Label
-            {
-                Text = "NODEPUNCH",
-                Font = new Font("Segoe UI Semibold", 30f, FontStyle.Bold),
-                ForeColor = Color.White,
-                AutoSize = true,
-                Location = new Point(40, 58),
-                BackColor = Color.Transparent
-            };
-            lblSub = new Label
-            {
-                Text = "Backend Node.js pronto — sem montar pasta na mão.",
-                Font = new Font("Segoe UI", 10f),
-                ForeColor = CorTextoSec,
-                AutoSize = true,
-                Location = new Point(42, 108),
-                BackColor = Color.Transparent
-            };
-
-            btnCriar = CriarBotaoPrimario("Novo projeto", new Point(40, 156), new Size(210, 50));
-            btnCriar.Click += btnCriar_Click;
-            btnAbrir = CriarBotaoSecundario("Abrir pasta", new Point(266, 156), new Size(210, 50));
-            btnAbrir.Click += btnAbrir_Click;
-
-            pnlCard = new Panel
-            {
-                Location = new Point(40, 228),
-                Size = new Size(436, 250),
-                BackColor = CorCard
-            };
-
-            lblRecentes = new Label
-            {
-                Text = "PROJETOS RECENTES",
-                Font = new Font("Segoe UI Semibold", 8.5f),
-                ForeColor = CorTextoSec,
-                AutoSize = true,
-                Location = new Point(16, 14),
-                BackColor = Color.Transparent
-            };
-            pnlRecentes = new FlowLayoutPanel
-            {
-                Location = new Point(12, 40),
-                Size = new Size(412, 198),
-                BackColor = CorCard,
-                FlowDirection = FlowDirection.TopDown,
-                WrapContents = false,
-                AutoScroll = true
-            };
-            pnlCard.Controls.Add(lblRecentes);
-            pnlCard.Controls.Add(pnlRecentes);
-
-            this.ClientSize = new Size(516, 510);
-            this.BackColor = CorFundo;
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "NodePunch";
-            this.Font = new Font("Segoe UI", 9f);
-            this.Controls.AddRange(new Control[]
-            {
-                pnlAccent, lblVersao, lblTitulo, lblSub,
-                btnCriar, btnAbrir, pnlCard, btnInfo, btnFechar
-            });
-            this.ResumeLayout(false);
+            Text = "NodePunch";
+            ClientSize = new Size(940, 700);
+            MinimumSize = new Size(720, 600);
+            StartPosition = FormStartPosition.CenterScreen;
+            BackColor = Tema.Fundo;
+            Font = new Font("Segoe UI", 10f);
+            var raiz = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 3, ColumnCount = 1, BackColor = Tema.Fundo };
+            raiz.RowStyles.Add(new RowStyle(SizeType.Absolute, 242));
+            raiz.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            raiz.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
+            var hero = new PainelMarca { Dock = DockStyle.Fill, Margin = Padding.Empty, MostrarRede = true, Size = new Size(940, 242) };
+            hero.Controls.Add(new Label { Text = "NODEPUNCH  /  BACKEND STUDIO", AutoSize = true, Location = new Point(32, 26), Font = new Font("Consolas", 10f, FontStyle.Bold), ForeColor = Tema.Amarelo, BackColor = Color.Transparent });
+            hero.Controls.Add(new Label { Text = "Seu backend começa aqui.", AutoSize = true, Location = new Point(29, 64), Font = new Font("Segoe UI Semibold", 25f), ForeColor = Tema.Texto, BackColor = Color.Transparent });
+            hero.Controls.Add(new Label { Text = "Transforme suas ideias em uma API. Um projeto de cada vez.", Location = new Point(32, 119), Size = new Size(548, 26), AutoEllipsis = true, ForeColor = Tema.Secundario, BackColor = Color.Transparent });
+            var versao = new Label { Text = "v" + Application.ProductVersion.Split('+')[0], Location = new Point(834, 26), Size = new Size(74, 24), TextAlign = ContentAlignment.MiddleCenter, ForeColor = Tema.Amarelo, BackColor = Tema.Campo, Font = new Font("Consolas", 9f), Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            hero.Controls.Add(versao);
+            btnCriar = Tema.Botao("+  Novo projeto", btnCriar_Click, true);
+            btnCriar.Location = new Point(32, 167); btnCriar.Size = new Size(220, 48); btnCriar.TabIndex = 0;
+            btnAbrir = Tema.Botao("Abrir projeto  ↗", btnAbrir_Click);
+            btnAbrir.Location = new Point(266, 167); btnAbrir.Size = new Size(200, 48); btnAbrir.TabIndex = 1;
+            hero.Controls.AddRange(new Control[] { btnCriar, btnAbrir });
+            raiz.Controls.Add(hero, 0, 0);
+            var recentes = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 2, ColumnCount = 1, Padding = new Padding(32, 22, 32, 16), Margin = Padding.Empty };
+            recentes.RowStyles.Add(new RowStyle(SizeType.Absolute, 52));
+            recentes.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            var titulo = new Panel { Dock = DockStyle.Fill, Margin = Padding.Empty, Size = new Size(876, 52) };
+            titulo.Controls.Add(new Label { Text = "Continue de onde parou", AutoSize = true, Font = new Font("Segoe UI Semibold", 16f), ForeColor = Tema.Texto });
+            lblQuantidade = new Label { Text = "PROJETOS RECENTES", Dock = DockStyle.Right, Width = 180, TextAlign = ContentAlignment.TopRight, Padding = new Padding(0, 9, 0, 0), Font = new Font("Consolas", 8.5f), ForeColor = Tema.Secundario };
+            titulo.Controls.Add(lblQuantidade);
+            recentes.Controls.Add(titulo, 0, 0);
+            pnlRecentes = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true, Margin = Padding.Empty };
+            pnlRecentes.SizeChanged += (s, e) => AjustarRecentes();
+            recentes.Controls.Add(pnlRecentes, 0, 1);
+            raiz.Controls.Add(recentes, 0, 1);
+            var rodape = new Panel { Dock = DockStyle.Fill, Margin = Padding.Empty, BackColor = Tema.Superficie, Size = new Size(940, 40) };
+            rodape.Controls.Add(new Label { Text = "Ctrl+N  novo projeto     Ctrl+O  abrir projeto", AutoSize = true, Location = new Point(32, 12), ForeColor = Tema.Secundario, Font = new Font("Consolas", 8.5f) });
+            var sobre = Tema.Botao("André Rösler • NodePunch", (s, e) => MessageBox.Show(this, "NODEPUNCH " + Application.ProductVersion.Split('+')[0] + "\n\nDo primeiro nó à sua próxima API.\nExpress • MySQL • PostgreSQL • Firebase\n\nandre-rosler.com", "Sobre o NodePunch", MessageBoxButtons.OK, MessageBoxIcon.Information));
+            sobre.Size = new Size(208, 30); sobre.Location = new Point(700, 5); sobre.Anchor = AnchorStyles.Top | AnchorStyles.Right; sobre.FlatAppearance.BorderSize = 0; sobre.BackColor = Tema.Superficie;
+            rodape.Controls.Add(sobre); raiz.Controls.Add(rodape, 0, 2);
+            Controls.Add(raiz);
+            KeyPreview = true;
+            KeyDown += (s, e) => { if (e.Control && e.KeyCode == Keys.N) { btnCriar.PerformClick(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.O) { btnAbrir.PerformClick(); e.SuppressKeyPress = true; } };
+            CarregarRecentes();
+            Shown += (s, e) => AjustarRecentes();
         }
 
         internal void AtualizarRecentes() => CarregarRecentes();
-
-        private void AplicarLayout()
+        private void AjustarRecentes()
         {
-            ClientSize = new Size(760, 640);
-            MinimumSize = new Size(640, 560);
-            FormBorderStyle = FormBorderStyle.Sizable;
-            MaximizeBox = true;
-            BackColor = Tema.Fundo;
-            Tema.Aplicar(this);
-            pnlAccent.BackColor = Tema.Amarelo;
-            lblVersao.ForeColor = Tema.Fundo;
-            lblSub.ForeColor = Tema.Secundario;
-            lblRecentes.ForeColor = Tema.Secundario;
-            btnFechar.Visible = false;
-            btnInfo.Location = new Point(684, 28);
-            btnInfo.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnInfo.AccessibleName = "Sobre o NodePunch";
-            btnCriar.Size = new Size(260, 54);
-            btnAbrir.Location = new Point(316, 156);
-            btnAbrir.Size = new Size(220, 54);
-            btnCriar.TabIndex = 0; btnAbrir.TabIndex = 1; pnlCard.TabIndex = 2; btnInfo.TabIndex = 3;
-            pnlCard.Size = new Size(680, 372);
-            pnlCard.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            pnlRecentes.Size = new Size(656, 314);
-            pnlRecentes.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            pnlRecentes.SizeChanged += (s, e) => { foreach (Control item in pnlRecentes.Controls) item.Width = Math.Max(100, pnlRecentes.ClientSize.Width - 24); };
-            KeyPreview = true;
-            KeyDown += (s, e) => { if (e.Control && e.KeyCode == Keys.N) { btnCriar.PerformClick(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.O) { btnAbrir.PerformClick(); e.SuppressKeyPress = true; } };
+            foreach (Control item in pnlRecentes.Controls) item.Width = Math.Max(120, pnlRecentes.ClientSize.Width - 24);
         }
-
         private void CarregarRecentes()
         {
-            pnlRecentes.Controls.Clear();
+            while (pnlRecentes.Controls.Count > 0) pnlRecentes.Controls[0].Dispose();
             var items = Recentes.Listar();
+            lblQuantidade.Text = items.Count == 0 ? "PROJETOS RECENTES" : items.Count + " PROJETO" + (items.Count == 1 ? "" : "S");
             if (items.Count == 0)
             {
-                pnlRecentes.Controls.Add(new Label
-                {
-                    Text = "Nada aqui ainda. Crie o primeiro backend.",
-                    ForeColor = CorTextoSec,
-                    AutoSize = true,
-                    Font = new Font("Segoe UI", 9f),
-                    Padding = new Padding(4, 8, 4, 8)
-                });
-                return;
+                var vazio = new Panel { Height = 150, BackColor = Tema.Superficie, Padding = new Padding(24) };
+                vazio.Controls.Add(new Label { Text = "{ }", AutoSize = true, Location = new Point(24, 22), Font = new Font("Consolas", 21f, FontStyle.Bold), ForeColor = Tema.Amarelo });
+                vazio.Controls.Add(new Label { Text = "O próximo projeto pode ser o seu melhor.", AutoSize = true, Location = new Point(24, 72), Font = new Font("Segoe UI Semibold", 12f), ForeColor = Tema.Texto });
+                vazio.Controls.Add(new Label { Text = "Crie um backend novo ou abra uma pasta para começar.", AutoSize = true, Location = new Point(24, 104), ForeColor = Tema.Secundario, Font = new Font("Segoe UI", 9f) });
+                pnlRecentes.Controls.Add(vazio);
             }
             foreach (var item in items)
             {
-                var caminho = item.Caminho;
-                var nome = item.Nome;
-                var card = Tema.Botao(nome + "\n" + Encurtar(caminho), (s, e) => AbrirCaminho(caminho, nome));
-                card.Width = pnlRecentes.ClientSize.Width - 24;
-                card.Height = 66;
-                card.TextAlign = ContentAlignment.MiddleLeft;
-                card.Padding = new Padding(14, 4, 14, 4);
-                card.Margin = new Padding(0, 0, 0, 10);
-                card.AutoEllipsis = true;
-                card.AccessibleName = nome + ", " + caminho;
+                string caminho = item.Caminho;
+                var card = new CartaoAcao(item.Nome, caminho, () => AbrirCaminho(caminho, item.Nome), "NP");
+                card.AccessibleDescription = caminho;
                 pnlRecentes.Controls.Add(card);
             }
-        }
-
-        private static string Encurtar(string caminho)
-        {
-            if (string.IsNullOrWhiteSpace(caminho)) return "";
-            return caminho.Length <= 54 ? caminho : "…" + caminho.Substring(caminho.Length - 53);
-        }
-
-        private Button CriarBotaoPrimario(string texto, Point loc, Size size)
-        {
-            var btn = new Button
-            {
-                Text = texto,
-                Location = loc,
-                Size = size,
-                BackColor = CorAmarelo,
-                ForeColor = Color.Black,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI Semibold", 11f, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
-            btn.FlatAppearance.BorderSize = 0;
-            btn.FlatAppearance.MouseOverBackColor = CorAmareloHover;
-            return btn;
-        }
-
-        private Button CriarBotaoSecundario(string texto, Point loc, Size size)
-        {
-            var btn = new Button
-            {
-                Text = texto,
-                Location = loc,
-                Size = size,
-                BackColor = CorCard,
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI Semibold", 11f),
-                Cursor = Cursors.Hand
-            };
-            btn.FlatAppearance.BorderSize = 1;
-            btn.FlatAppearance.BorderColor = CorBorda;
-            btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(36, 36, 40);
-            return btn;
-        }
-
-        private Button CriarBotaoIcone(string texto, Point loc)
-        {
-            var btn = new Button
-            {
-                Text = texto,
-                Location = loc,
-                Size = new Size(32, 32),
-                BackColor = CorFundo,
-                ForeColor = CorTextoSec,
-                FlatStyle = FlatStyle.Flat,
-                Cursor = Cursors.Hand,
-                Font = new Font("Segoe UI", 10f)
-            };
-            btn.FlatAppearance.BorderSize = 0;
-            btn.FlatAppearance.MouseOverBackColor = CorCard;
-            return btn;
+            AjustarRecentes();
         }
 
         private void btnCriar_Click(object sender, EventArgs e)
@@ -260,15 +98,9 @@ namespace NodePunch.Forms
 
         private void btnAbrir_Click(object sender, EventArgs e)
         {
-            using OpenFileDialog ofd = new OpenFileDialog
-            {
-                ValidateNames = false,
-                CheckFileExists = false,
-                CheckPathExists = true,
-                FileName = "Selecionar pasta"
-            };
-            if (ofd.ShowDialog() != DialogResult.OK) return;
-            AbrirCaminho(Path.GetDirectoryName(ofd.FileName), null);
+            using var pasta = new FolderBrowserDialog { Description = "Escolha a pasta do projeto NodePunch", UseDescriptionForTitle = true, ShowNewFolderButton = false };
+            if (pasta.ShowDialog(this) != DialogResult.OK) return;
+            AbrirCaminho(pasta.SelectedPath, null);
         }
 
         internal void AbrirCaminho(string caminho, string nome)

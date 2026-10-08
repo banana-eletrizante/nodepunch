@@ -1,5 +1,17 @@
 # Histórico
 
+## 1.5.0
+
+- Nova tela inicial com composição exclusiva NodePunch, assinatura do autor e rede de nós desenhada em vetor.
+- Cartões arredondados com símbolos e cores próprias para model, API, JWT, ambiente, editor e npm.
+- Cabeçalhos com selo NP e a mesma identidade nas telas de projeto e nos formulários.
+- Projetos recentes com cartões, nomes e caminhos separados; estado vazio com orientação para começar.
+- Prévia com realce de palavras-chave, comentários, strings e números em arquivos de código.
+  Arquivos maiores continuam disponíveis em texto simples para preservar a responsividade.
+- Barra de prévia informa tipo, tamanho e número de linhas; arquivos recebem cores por extensão no explorador.
+- Seleção de pasta usa o diálogo de pastas do Windows, tanto para abrir quanto para criar projetos.
+- Mantém o executável portátil comprimido e a navegação por teclado.
+
 ## 1.4.0
 
 - Painel de projeto com seis cartões de ação, títulos e descrições, no lugar da área MDI vazia.

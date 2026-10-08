@@ -312,16 +312,14 @@ namespace NodePunch.Forms
 
         private void btnAbrirPasta_Click(object sender, EventArgs e)
         {
-            using OpenFileDialog ofd = new OpenFileDialog
+            using var pasta = new FolderBrowserDialog
             {
-                ValidateNames = false,
-                CheckFileExists = false,
-                CheckPathExists = true,
-                FileName = "Selecionar pasta",
-                InitialDirectory = txtCaminho.Text
+                Description = "Escolha onde criar seu backend",
+                UseDescriptionForTitle = true,
+                SelectedPath = Directory.Exists(txtCaminho.Text) ? txtCaminho.Text : ""
             };
-            if (ofd.ShowDialog() == DialogResult.OK)
-                txtCaminho.Text = Path.GetDirectoryName(ofd.FileName);
+            if (pasta.ShowDialog(this) == DialogResult.OK)
+                txtCaminho.Text = pasta.SelectedPath;
         }
 
         private void btnBuscarCredenciais_Click(object sender, EventArgs e)

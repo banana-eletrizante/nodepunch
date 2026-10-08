@@ -62,9 +62,9 @@ namespace NodePunch.Core
             foreach (Control control in form.Controls) if (control.Dock == DockStyle.None) control.Top += 76;
             form.ClientSize = new Size(form.ClientSize.Width, form.ClientSize.Height + 76);
             form.BackColor = Fundo; Aplicar(form);
-            var header = new Panel { Dock = DockStyle.Top, Height = 76, BackColor = Fundo };
-            header.Controls.Add(new Label { Text = titulo, Location = new Point(24, 15), AutoSize = true, Font = new Font("Segoe UI Semibold", 17f), ForeColor = Texto });
-            header.Controls.Add(new Label { Text = descricao, Location = new Point(25, 48), AutoSize = true, Font = new Font("Segoe UI", 9f), ForeColor = Secundario });
+            var header = new PainelMarca { Dock = DockStyle.Top, Height = 76, MostrarSelo = true };
+            header.Controls.Add(new Label { Text = titulo, Location = new Point(82, 15), AutoSize = true, Font = new Font("Segoe UI Semibold", 17f), ForeColor = Texto, BackColor = Color.Transparent });
+            header.Controls.Add(new Label { Text = descricao, Location = new Point(83, 48), Size = new Size(form.ClientSize.Width - 104, 22), AutoEllipsis = true, Font = new Font("Segoe UI", 9f), ForeColor = Secundario, BackColor = Color.Transparent });
             form.Controls.Add(header); header.BringToFront();
             form.StartPosition = FormStartPosition.CenterParent; form.MinimizeBox = false; form.ShowInTaskbar = false;
             form.AutoScroll = true;
