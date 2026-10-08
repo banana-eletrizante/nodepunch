@@ -254,8 +254,8 @@ namespace NodePunch.Forms
 
         private void btnCriar_Click(object sender, EventArgs e)
         {
-            new frmNovoProjeto { Inicial = this }.Show(this);
-            this.Visible = false;
+            using var form = new frmNovoProjeto { Inicial = this };
+            form.ShowDialog(this);
         }
 
         private void btnAbrir_Click(object sender, EventArgs e)

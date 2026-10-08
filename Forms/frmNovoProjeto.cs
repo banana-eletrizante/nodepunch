@@ -457,6 +457,7 @@ namespace NodePunch.Forms
                 };
                 form.Show();
                 IcCriou = true;
+                Inicial?.Hide();
                 MessageBox.Show(
                     "Projeto criado com sucesso!\nNão esqueça de rodar 'npm install' na pasta do projeto.",
                     "Aviso",
