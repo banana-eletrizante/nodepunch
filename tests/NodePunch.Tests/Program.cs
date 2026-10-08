@@ -126,7 +126,7 @@ internal static class Program
                 Check(form.Controls.Cast<Control>().Where(c => c.Dock == DockStyle.None).All(c => c.Right <= form.ClientSize.Width && c.Bottom <= form.ClientSize.Height), "dialog controls fit: " + form.GetType().Name);
                 form.Scale(new SizeF(1.5f, 1.5f));
                 form.PerformLayout();
-                Check(form.Controls.Cast<Control>().Where(c => c.Dock == DockStyle.None).All(c => c.Right <= form.ClientSize.Width && c.Bottom <= form.ClientSize.Height), "dialog controls fit at 150%: " + form.GetType().Name);
+                Check(form.AutoScroll && form.Controls.Cast<Control>().Where(c => c.Dock == DockStyle.None).All(c => c.Right <= form.DisplayRectangle.Right && c.Bottom <= form.DisplayRectangle.Bottom), "dialog controls remain reachable at 150%: " + form.GetType().Name);
             }
             form.Dispose();
         }

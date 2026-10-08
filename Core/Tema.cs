@@ -67,6 +67,7 @@ namespace NodePunch.Core
             header.Controls.Add(new Label { Text = descricao, Location = new Point(25, 48), AutoSize = true, Font = new Font("Segoe UI", 9f), ForeColor = Secundario });
             form.Controls.Add(header); header.BringToFront();
             form.StartPosition = FormStartPosition.CenterParent; form.MinimizeBox = false; form.ShowInTaskbar = false;
+            form.AutoScroll = true;
             form.KeyPreview = true;
             form.KeyDown += (s, e) => { if (e.KeyCode == Keys.Escape) { form.Close(); e.Handled = true; } };
             form.AcceptButton = confirmar;
