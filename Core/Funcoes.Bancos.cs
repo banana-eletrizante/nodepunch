@@ -4,17 +4,19 @@ namespace NodePunch.Core
 {
     internal static partial class Funcoes
     {
+        private const string ConsultaSqlMySQL = "\tstatic async consultarSql(comando, parametros = []) {\n\t\tawait Banco.#conectar();\n\t\tconst [linhas] = await Banco.#pool.execute(comando, parametros);\n\t\treturn linhas;\n\t}\n\n";
+
         private static string GerarBancoMySQL(ConexaoBanco dados)
         {
             string consultarExecutar = dados.ComSP
-                ? tab + "static async consultar(nomeProcedure, parametros = []) {\n" + tab + tab + "await Banco.#conectar();\n" + tab + tab + "const placeholders = parametros.map(() => '?').join(', ');\n" + tab + tab + "const sql = placeholders ? `CALL ${nomeProcedure}(${placeholders})` : `CALL ${nomeProcedure}`;\n" + tab + tab + "const [linhas] = await Banco.#pool.query(sql, parametros);\n" + tab + tab + "return linhas[0] || [];\n" + tab + "}\n\n" + tab + "static async executar(nomeProcedure, parametros = []) {\n" + tab + tab + "await Banco.#conectar();\n" + tab + tab + "const placeholders = parametros.map(() => '?').join(', ');\n" + tab + tab + "const sql = placeholders ? `CALL ${nomeProcedure}(${placeholders})` : `CALL ${nomeProcedure}`;\n" + tab + tab + "await Banco.#pool.query(sql, parametros);\n" + tab + "}\n"
+                ? tab + "static async consultar(nomeProcedure, parametros = []) {\n" + tab + tab + "if (typeof nomeProcedure !== 'string' || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(nomeProcedure)) throw new Error('Nome de procedure inválido');\n" + tab + tab + "await Banco.#conectar();\n" + tab + tab + "const placeholders = parametros.map(() => '?').join(', ');\n" + tab + tab + "const sql = placeholders ? `CALL ${nomeProcedure}(${placeholders})` : `CALL ${nomeProcedure}`;\n" + tab + tab + "const [linhas] = await Banco.#pool.query(sql, parametros);\n" + tab + tab + "return linhas[0] || [];\n" + tab + "}\n\n" + tab + "static async executar(nomeProcedure, parametros = []) {\n" + tab + tab + "if (typeof nomeProcedure !== 'string' || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(nomeProcedure)) throw new Error('Nome de procedure inválido');\n" + tab + tab + "await Banco.#conectar();\n" + tab + tab + "const placeholders = parametros.map(() => '?').join(', ');\n" + tab + tab + "const sql = placeholders ? `CALL ${nomeProcedure}(${placeholders})` : `CALL ${nomeProcedure}`;\n" + tab + tab + "await Banco.#pool.query(sql, parametros);\n" + tab + "}\n"
                 : tab + "static async consultar(comando, parametros = []) {\n" + tab + tab + "await Banco.#conectar();\n" + tab + tab + "const [linhas] = await Banco.#pool.execute(comando, parametros);\n" + tab + tab + "return linhas;\n" + tab + "}\n\n" + tab + "static async executar(comando, parametros = []) {\n" + tab + tab + "await Banco.#conectar();\n" + tab + tab + "await Banco.#pool.execute(comando, parametros);\n" + tab + "}\n";
 
             return "const mysql = require('mysql2/promise');\nrequire('dotenv').config();\n\nclass Banco {\n" +
-tab + "static #pool = null;\n\n" +
+tab + "static #pool = null;\n\n" + ConsultaSqlMySQL +
 tab + "static async #conectar() {\n" +
 tab + tab + "if (Banco.#pool !== null) return;\n" +
-tab + tab + "Banco.#pool = mysql.createPool({ host: process.env.DB_HOST, port: process.env.DB_PORT || " + (string.IsNullOrWhiteSpace(dados.Porta) ? "3306" : dados.Porta) + ", user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME, charset: 'utf8mb4', waitForConnections: true, connectionLimit: 10 });\n" +
+tab + tab + "Banco.#pool = mysql.createPool({ host: process.env.DB_HOST, port: process.env.DB_PORT || 3306, user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME, charset: 'utf8mb4', waitForConnections: true, connectionLimit: 10 });\n" +
 tab + "}\n\n" + consultarExecutar + "}\n\nmodule.exports = Banco;\n";
         }
 
@@ -22,7 +24,7 @@ tab + "}\n\n" + consultarExecutar + "}\n\nmodule.exports = Banco;\n";
         {
             return "const { Pool } = require('pg');\nrequire('dotenv').config();\n\nclass Banco {\n" +
 tab + "static #pool = null;\n" +
-tab + "static #conectar() { if (Banco.#pool !== null) return; Banco.#pool = new Pool({ host: process.env.DB_HOST, port: process.env.DB_PORT || " + (string.IsNullOrWhiteSpace(dados.Porta) ? "5432" : dados.Porta) + ", user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME, max: 10 }); }\n" +
+tab + "static #conectar() { if (Banco.#pool !== null) return; Banco.#pool = new Pool({ host: process.env.DB_HOST, port: process.env.DB_PORT || 5432, user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME, max: 10 }); }\n" +
 tab + "static async consultar(comando, parametros = []) { Banco.#conectar(); const resultado = await Banco.#pool.query(comando, parametros); return resultado.rows; }\n" +
 tab + "static async executar(comando, parametros = []) { Banco.#conectar(); await Banco.#pool.query(comando, parametros); }\n" +
 "}\nmodule.exports = Banco;\n";

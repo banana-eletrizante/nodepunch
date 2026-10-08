@@ -8,16 +8,15 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>NodePunch</RootNamespace>
     <AssemblyName>NodePunch</AssemblyName>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <Authors>André Rösler</Authors>
     <Product>NodePunch</Product>
     <ApplicationIcon>Resources\nodepunch.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Resources\nodepunch.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <EmbeddedResource Include="Resources\nodepunch.ico" />
+    <Compile Remove="tests\**\*.cs" />
   </ItemGroup>
 
 </Project>

@@ -15,9 +15,8 @@ namespace NodePunch.Core
             {
                 if (_icone == null)
                 {
-                    string caminho = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "nodepunch.ico");
-                    if (File.Exists(caminho))
-                        _icone = new Icon(caminho);
+                    using var recurso = typeof(IconHelper).Assembly.GetManifestResourceStream("NodePunch.Resources.nodepunch.ico");
+                    if (recurso != null) _icone = new Icon(recurso);
                 }
                 if (_icone != null)
                     form.Icon = _icone;

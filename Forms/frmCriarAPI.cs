@@ -186,13 +186,16 @@ namespace NodePunch.Forms
                 MessageBox.Show("O nome da Rota só tinha caracteres inválidos (acentos/símbolos). Use letras ou números.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
-            if (Funcoes.EhPalavraReservadaJS(nome))
+            if (!Funcoes.EhIdentificadorJS(nome))
             {
-                MessageBox.Show($"\"{nome}\" é uma palavra reservada do JavaScript e não pode ser usada como nome de rota.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show("A rota deve começar com letra ou sublinhado e não pode usar palavras reservadas.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
             string tab = "\t";
             bool usaValidator = chkValidator.Checked;
+            try
+            {
+                Funcoes.ValidarRegistroRota(CaminhoProjeto, nome);
 
             string caminhoRota = Path.Combine(CaminhoProjeto, "src", "routes", nome + "Routes.js");
             if (File.Exists(caminhoRota))
@@ -208,7 +211,7 @@ namespace NodePunch.Forms
             }
 
             string[] campos = txtCampos.Text.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                                             .Select(c => c.Trim()).Where(c => c != "").ToArray();
+                                             .Select(c => c.Trim()).Where(c => c != "").Distinct().ToArray();
 
             string conteudo;
 
@@ -216,7 +219,7 @@ namespace NodePunch.Forms
             {
                 string cadeiaValidacoes = campos.Length == 0
                     ? tab + "// Nenhum campo obrigatório definido — ajuste manualmente se precisar\n"
-                    : string.Join("\n", campos.Select(c => tab + "body('" + c + "').notEmpty().withMessage('" + c + " é obrigatório'),"));
+                    : string.Join("\n", campos.Select(c => tab + "body('" + Funcoes.EscaparJS(c) + "').notEmpty().withMessage('" + Funcoes.EscaparJS(c) + " é obrigatório'),"));
 
                 string handlersValidator = "";
                 if (chkGET.Checked)
@@ -247,8 +250,9 @@ handlersValidator +
                 if (!depOk)
                 {
                     MessageBox.Show(
-                        "Rota criada, mas não consegui adicionar 'express-validator' automaticamente ao package.json. Adicione manualmente: npm install express-validator",
+                        "Não consegui adicionar 'express-validator' ao package.json. Corrija o JSON e tente novamente.",
                         "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
             }
             else
@@ -285,29 +289,18 @@ handlers +
             }
 
             Funcoes.CriarArquivo(Path.Combine(CaminhoProjeto, "src", "routes"), nome + "Routes", conteudo);
-            RegistrarRotaNoServerJs(nome);
+            Funcoes.RegistrarRotaNoServer(CaminhoProjeto, nome);
 
             txtNomeAPI.Clear();
             txtCampos.Clear();
             chkValidator.Checked = false;
             ProjetoAtualizado?.Invoke(this, EventArgs.Empty);
-            MessageBox.Show("Rota criada com sucesso!", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+            MessageBox.Show("Rota criada com sucesso!" + (usaValidator ? "\nRode npm install para instalar express-validator antes de iniciar o backend." : ""), "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             Close();
-        }
-
-        private void RegistrarRotaNoServerJs(string nome)
-        {
-            string caminhoServer = Path.Combine(CaminhoProjeto, "server.js");
-            if (!File.Exists(caminhoServer)) return;
-
-            string conteudo = File.ReadAllText(caminhoServer);
-            string linhaRota = $"app.use('/api/{nome}', require('./src/routes/{nome}Routes'));\n";
-            string marcador = "// Exemplo: app.use('/api/exemplo', require('./src/routes/exemploRoutes'));\n";
-
-            if (conteudo.Contains(marcador) && !conteudo.Contains(linhaRota))
+            }
+            catch (Exception ex)
             {
-                conteudo = conteudo.Replace(marcador, marcador + linhaRota);
-                File.WriteAllText(caminhoServer, conteudo);
+                MessageBox.Show(ex.Message, "Erro ao criar rota", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

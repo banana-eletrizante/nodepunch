@@ -14,5 +14,22 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tests/package-lock.json
       - name: Build
         run: dotnet build NodePunch.csproj -c Release
+      - name: Test application and generators
+        run: dotnet run --project tests/NodePunch.Tests/NodePunch.Tests.csproj -c Release -- tests/generated
+      - name: Install backend test dependencies
+        run: npm ci --prefix tests --no-audit --no-fund
+      - name: Test generated JavaScript and HTTP behavior
+        run: node tests/generated-backends.cjs tests/generated
+      - name: Publish portable executable
+        run: dotnet publish NodePunch.csproj -p:PublishProfile=Portable -o artifacts/portable
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NodePunch-portable-win-x64
+          path: artifacts/portable/NodePunch.exe

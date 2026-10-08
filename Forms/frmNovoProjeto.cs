@@ -15,6 +15,7 @@ namespace NodePunch.Forms
         private Panel pnlAccent;
         private Panel pnlCamposBanco;
         private Button btnCriarProjeto;
+        private CheckBox chkInstalarDependencias;
 
         // Campos MySQL / PostgreSQL
         private TextBox txtServer, txtPorta, txtSchema, txtUsuario, txtSenha;
@@ -52,7 +53,7 @@ namespace NodePunch.Forms
 
             Label lblCaminho = CriarLabel("Caminho do Projeto:", new Point(24, 90));
             txtCaminho = CriarTextBox(new Point(24, 114), new Size(348, 28));
-            txtCaminho.Text = @"C:\projetos";
+            txtCaminho.Text = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
             btnAbrirPasta = CriarBotaoSecundario("...", new Point(380, 113), new Size(36, 30));
             btnAbrirPasta.Click += btnAbrirPasta_Click;
@@ -82,10 +83,21 @@ namespace NodePunch.Forms
             CriarCamposMySQLPostgres();
             CriarCamposFirebase();
 
-            btnCriarProjeto = CriarBotaoPrimario("Criar Projeto", new Point(256, 430), new Size(160, 44));
-            btnCriarProjeto.Click += btnCriarProjeto_Click;
+            chkInstalarDependencias = new CheckBox
+            {
+                Text = "Instalar dependências do backend (npm install)",
+                Location = new Point(24, 426),
+                AutoSize = true,
+                ForeColor = Color.White
+            };
+            btnCriarProjeto = CriarBotaoPrimario("Criar Projeto", new Point(256, 464), new Size(160, 44));
+            btnCriarProjeto.Click += (sender, args) =>
+            {
+                try { btnCriarProjeto_Click(sender, args); }
+                catch (Exception ex) { MessageBox.Show(ex.Message, "Erro ao criar projeto", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            };
 
-            this.ClientSize = new Size(440, 500);
+            this.ClientSize = new Size(440, 534);
             this.BackColor = CorFundo;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
@@ -101,7 +113,7 @@ namespace NodePunch.Forms
                 lblCaminho, txtCaminho, btnAbrirPasta,
                 lblBanco, cboBanco,
                 pnlCamposBanco,
-                btnCriarProjeto
+                chkInstalarDependencias, btnCriarProjeto
             });
 
             AtualizarCamposBanco();
@@ -356,9 +368,10 @@ namespace NodePunch.Forms
                 return;
             }
 
-            if ((tipo == TipoBanco.MySQL || tipo == TipoBanco.PostgreSQL) && !int.TryParse(txtPorta.Text.Trim(), out _))
+            if ((tipo == TipoBanco.MySQL || tipo == TipoBanco.PostgreSQL) &&
+                (!int.TryParse(txtPorta.Text.Trim(), out int porta) || porta < 1 || porta > 65535))
             {
-                MessageBox.Show("A porta precisa ser um número.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show("A porta precisa estar entre 1 e 65535.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
 
@@ -374,6 +387,11 @@ namespace NodePunch.Forms
                 return;
             }
 
+            if (!Funcoes.EhNomeArquivoWindows(txtNomeProjeto.Text))
+            {
+                MessageBox.Show("Esse nome é reservado pelo Windows. Escolha outro nome para o projeto.", "Atenção");
+                return;
+            }
             string caminhoProjetoChecagem = Path.Combine(txtCaminho.Text, txtNomeProjeto.Text);
             if (Directory.Exists(caminhoProjetoChecagem) && Directory.GetFileSystemEntries(caminhoProjetoChecagem).Length > 0)
             {
@@ -419,11 +437,14 @@ namespace NodePunch.Forms
                     Funcoes.CriarClasseBaseBD(dados, Path.Combine(caminhoProjeto, "src", "base"));
                     Funcoes.CriarEnv(caminhoProjeto, dados);
                 }
+                else Funcoes.CriarEnv(caminhoProjeto, new ConexaoBanco());
 
                 Funcoes.CriarPackageJson(caminhoProjeto, txtNomeProjeto.Text, tipo);
                 Funcoes.CriarServerJs(caminhoProjeto);
                 Funcoes.CriarReadme(caminhoProjeto, txtNomeProjeto.Text, tipo);
                 Funcoes.CriarGitignore(caminhoProjeto);
+                Recentes.Registrar(txtNomeProjeto.Text, caminhoProjeto);
+                if (chkInstalarDependencias.Checked) Shell.AbrirNpmInstall(caminhoProjeto);
 
                 Form1 form = new Form1
                 {

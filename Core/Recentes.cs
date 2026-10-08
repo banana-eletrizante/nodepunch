@@ -23,8 +23,10 @@ namespace NodePunch.Core
             try
             {
                 if (!File.Exists(Arquivo)) return new List<ProjetoRecente>();
-                return JsonSerializer.Deserialize<List<ProjetoRecente>>(File.ReadAllText(Arquivo))
-                       ?? new List<ProjetoRecente>();
+                return (JsonSerializer.Deserialize<List<ProjetoRecente>>(File.ReadAllText(Arquivo))
+                       ?? new List<ProjetoRecente>())
+                    .Where(x => x != null && !string.IsNullOrWhiteSpace(x.Caminho) && Directory.Exists(x.Caminho))
+                    .Take(8).ToList();
             }
             catch
             {

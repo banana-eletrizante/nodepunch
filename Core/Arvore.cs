@@ -25,7 +25,8 @@ namespace NodePunch.Core
                 foreach (string dir in directories)
                 {
                     DirectoryInfo di = new DirectoryInfo(dir);
-                    if (!di.Name.Equals("node_modules", StringComparison.OrdinalIgnoreCase) &&
+                    if ((di.Attributes & FileAttributes.ReparsePoint) == 0 &&
+                        !di.Name.Equals("node_modules", StringComparison.OrdinalIgnoreCase) &&
                         !di.Name.Equals(".git", StringComparison.OrdinalIgnoreCase))
                     {
                         TreeNode child = new TreeNode(di.Name) { Tag = dir };
@@ -58,9 +59,18 @@ namespace NodePunch.Core
             }
 
             TreeNode selectedNode = arvore.SelectedNode;
+            if (selectedNode.Parent == null)
+            {
+                MessageBox.Show("A pasta raiz do projeto não pode ser excluída pelo explorador.", "Atenção");
+                return;
+            }
             string path = selectedNode.Tag.ToString();
             try
             {
+                string raiz = Path.GetFullPath(arvore.Nodes[0].Tag.ToString()).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                path = Path.GetFullPath(path);
+                if (!path.StartsWith(raiz, StringComparison.OrdinalIgnoreCase))
+                    throw new IOException("O item não está dentro da pasta do projeto.");
                 if (File.Exists(path))
                     File.Delete(path);
                 else if (Directory.Exists(path))

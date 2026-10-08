@@ -14,10 +14,18 @@ namespace NodePunch.Core
 
             try
             {
+                string npm = null;
+                foreach (string pasta in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))
+                    if (File.Exists(Path.Combine(pasta.Trim('"'), "npm.cmd"))) { npm = Path.Combine(pasta.Trim('"'), "npm.cmd"); break; }
+                if (npm == null)
+                {
+                    MessageBox.Show("Node.js/npm não foi encontrado no PATH. O backend foi gerado. Instale o Node.js para executar npm install na pasta do projeto.", "NodePunch");
+                    return;
+                }
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = "cmd.exe",
-                    Arguments = "/k npm install",
+                    Arguments = "/d /k \"\"" + npm + "\" install\"",
                     WorkingDirectory = caminhoProjeto,
                     UseShellExecute = true
                 });

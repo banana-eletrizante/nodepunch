@@ -1,5 +1,7 @@
 using System;
 using System.Drawing;
+using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using NodePunch.Core;
 
@@ -44,7 +46,7 @@ namespace NodePunch.Forms
 
             lblInfo = new Label
             {
-                Text = "Gera middleware de proteção de rotas (JWT), controller e rotas de\nregistrar/login (com senha criptografada via bcrypt).\n\nEndpoints criados:\n  POST /api/auth/registrar\n  POST /api/auth/login",
+                Text = "Gera middleware de proteção de rotas (JWT), controller e rotas de\nregistrar/login (com hash de senha via bcrypt).\n\nEndpoints criados:\n  POST /api/auth/registrar\n  POST /api/auth/login",
                 ForeColor = CorTextoSec,
                 AutoSize = true,
                 Location = new Point(24, 64),
@@ -78,7 +80,7 @@ namespace NodePunch.Forms
             btnGerar.FlatAppearance.MouseOverBackColor = CorAmareloHover;
             btnGerar.Click += btnGerar_Click;
 
-            this.ClientSize = new Size(400, 290);
+            this.ClientSize = new Size(500, 290);
             this.BackColor = CorFundo;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
@@ -111,7 +113,10 @@ namespace NodePunch.Forms
             try
             {
                 TipoBanco tipo = Funcoes.DetectarTipoBanco(CaminhoProjeto);
-                bool depsOk = Funcoes.GerarAuthJWT(CaminhoProjeto, tipo);
+                bool existem = Funcoes.ArquivosAuth(CaminhoProjeto).Any(File.Exists);
+                if (existem && MessageBox.Show("Já existem arquivos de autenticação. Deseja sobrescrever o controller, middleware e rotas? A chave JWT existente será preservada.",
+                    "Autenticação já existe", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+                bool depsOk = Funcoes.GerarAuthJWT(CaminhoProjeto, tipo, sobrescrever: existem);
                 ProjetoAtualizado?.Invoke(this, EventArgs.Empty);
 
                 string avisoDeps = depsOk ? "" :

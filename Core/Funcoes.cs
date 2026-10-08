@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace NodePunch.Core
 {
@@ -61,7 +63,7 @@ namespace NodePunch.Core
             }
             string conteudo =
 "{\n" +
-tab + "\"name\": \"" + nomeProjeto.ToLower() + "\",\n" +
+tab + "\"name\": \"" + nomeProjeto.ToLowerInvariant() + "\",\n" +
 tab + "\"version\": \"1.0.0\",\n" +
 tab + "\"private\": true,\n" +
 tab + "\"main\": \"server.js\",\n" +
@@ -76,6 +78,9 @@ tab + "\"devDependencies\": {\n" +
 tab + tab + "\"nodemon\": \"^3.1.9\"\n" +
 tab + "}\n" +
 "}\n";
+            string nomePacote = nomeProjeto.ToLowerInvariant();
+            if (!Regex.IsMatch(nomePacote, "^[a-z0-9][a-z0-9._-]*$") || nomePacote.Length > 214)
+                throw new ArgumentException("Use um nome de projeto que comece com letra ou número, sem espaços ou símbolos.");
             CriarArquivo(caminhoProjeto, "package", conteudo, ".json");
         }
 
@@ -90,12 +95,12 @@ tab + "}\n" +
                     string porta = string.IsNullOrWhiteSpace(dados.Porta)
                         ? (dados.Tipo == TipoBanco.PostgreSQL ? "5432" : "3306")
                         : dados.Porta;
-                    conteudo += "DB_HOST=" + dados.Server + "\nDB_PORT=" + porta + "\nDB_USER=" + dados.User + "\nDB_PASSWORD=" + dados.Password + "\nDB_NAME=" + dados.Schema + "\n";
-                    exemplo += "DB_HOST=localhost\nDB_PORT=" + porta + "\nDB_USER=" + dados.User + "\nDB_PASSWORD=\nDB_NAME=" + dados.Schema + "\n";
+                    conteudo += "DB_HOST=" + ValorEnv(dados.Server) + "\nDB_PORT=" + porta + "\nDB_USER=" + ValorEnv(dados.User) + "\nDB_PASSWORD=" + ValorEnv(dados.Password) + "\nDB_NAME=" + ValorEnv(dados.Schema) + "\n";
+                    exemplo += "DB_HOST=localhost\nDB_PORT=" + porta + "\nDB_USER=" + ValorEnv(dados.User) + "\nDB_PASSWORD=\nDB_NAME=" + ValorEnv(dados.Schema) + "\n";
                     break;
                 case TipoBanco.Firebase:
-                    conteudo += "FIREBASE_PROJECT_ID=" + dados.FirebaseProjectId + "\nFIREBASE_SERVICE_ACCOUNT=" + dados.FirebaseServiceAccountPath + "\n";
-                    exemplo += "FIREBASE_PROJECT_ID=" + dados.FirebaseProjectId + "\nFIREBASE_SERVICE_ACCOUNT=./firebaseServiceAccountKey.json\n";
+                    conteudo += "FIREBASE_PROJECT_ID=" + ValorEnv(dados.FirebaseProjectId) + "\nFIREBASE_SERVICE_ACCOUNT=" + ValorEnv(dados.FirebaseServiceAccountPath) + "\n";
+                    exemplo += "FIREBASE_PROJECT_ID=" + ValorEnv(dados.FirebaseProjectId) + "\nFIREBASE_SERVICE_ACCOUNT=./firebaseServiceAccountKey.json\n";
                     break;
             }
             CriarArquivo(caminhoProjeto, ".env", conteudo, "");
@@ -125,8 +130,9 @@ tab + "res.json({ ok: true, uptime: process.uptime() });\n" +
 tab + "res.status(404).json({ mensagem: 'Rota não encontrada.' });\n" +
 "});\n\n" +
 "app.use((err, req, res, _next) => {\n" +
-tab + "console.error(err);\n" +
-tab + "res.status(500).json({ mensagem: 'Erro interno.' });\n" +
+tab + "const status = [400, 413].includes(err.status) ? err.status : 500;\n" +
+tab + "if (status === 500) console.error('Erro no backend:', err.message);\n" +
+tab + "res.status(status).json({ mensagem: status === 400 ? 'JSON inválido.' : status === 413 ? 'Corpo da requisição muito grande.' : 'Erro interno.' });\n" +
 "});\n\n" +
 "const PORT = process.env.PORT || 3000;\n" +
 "app.listen(PORT, () => {\n" +
@@ -163,8 +169,6 @@ tab + "credentials: true\n" +
 dbInfo +
 "- Copie `.env.example` para `.env` se precisar versionar um modelo sem senha.\n";
             CriarArquivo(caminhoProjeto, "README", conteudo, ".md");
-            Recentes.Registrar(nomeProjeto, caminhoProjeto);
-            Shell.AbrirNpmInstall(caminhoProjeto);
         }
 
         public static void CriarGitignore(string caminhoProjeto)
@@ -187,29 +191,66 @@ dbInfo +
         {
             string caminhoPackage = Path.Combine(caminhoProjeto, "package.json");
             if (!File.Exists(caminhoPackage)) return false;
-            string conteudo = File.ReadAllText(caminhoPackage);
-            string chave = "\"" + nomePacote + "\"";
-            if (conteudo.Contains(chave)) return true;
-            string secao = devDependency ? "\"devDependencies\": {" : "\"dependencies\": {";
-            if (!conteudo.Contains(secao)) return false;
-            File.WriteAllText(caminhoPackage, conteudo.Replace(secao, secao + "\n" + tab + tab + chave + ": \"" + versao + "\","));
-            return true;
+            try
+            {
+                var pacote = JsonNode.Parse(File.ReadAllText(caminhoPackage)) as JsonObject;
+                if (pacote == null) return false;
+                string secao = devDependency ? "devDependencies" : "dependencies";
+                if (pacote[secao] != null && pacote[secao] is not JsonObject) return false;
+                var deps = pacote[secao] as JsonObject;
+                if (deps == null) pacote[secao] = deps = new JsonObject();
+                if (deps.ContainsKey(nomePacote))
+                    return deps[nomePacote] is JsonValue valor && valor.TryGetValue<string>(out var atual) && !string.IsNullOrWhiteSpace(atual);
+                // A dependency needed at runtime must not remain dev-only.
+                var dev = pacote["devDependencies"] as JsonObject;
+                string existente = !devDependency ? dev?[nomePacote]?.GetValue<string>() : null;
+                deps[nomePacote] = existente ?? versao;
+                if (!devDependency) dev?.Remove(nomePacote);
+                File.WriteAllText(caminhoPackage, pacote.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n");
+                return true;
+            }
+            catch (JsonException) { return false; }
+            catch (InvalidOperationException) { return false; }
         }
 
         public static void AdicionarVariavelEnv(string caminhoProjeto, string chave, string valor)
         {
             string caminhoEnv = Path.Combine(caminhoProjeto, ".env");
             string conteudo = File.Exists(caminhoEnv) ? File.ReadAllText(caminhoEnv) : "";
-            if (conteudo.Contains(chave + "=")) return;
-            conteudo += (conteudo.EndsWith("\n") || conteudo == "" ? "" : "\n") + chave + "=" + valor + "\n";
+            var atribuicao = new Regex(@"(?m)^\s*" + Regex.Escape(chave) + @"\s*=([^\r\n]*)");
+            var atual = atribuicao.Match(conteudo);
+            if (atual.Success && atual.Groups[1].Value.Trim() is not "" and not "\"\"" and not "''") return;
+            if (atual.Success)
+            {
+                File.WriteAllText(caminhoEnv, atribuicao.Replace(conteudo, _ => chave + "=" + ValorEnv(valor), 1));
+                return;
+            }
+            conteudo += (conteudo.EndsWith("\n") || conteudo == "" ? "" : "\n") + chave + "=" + ValorEnv(valor) + "\n";
             File.WriteAllText(caminhoEnv, conteudo);
         }
 
         public static string EscaparJS(string valor)
         {
             if (valor == null) return "";
-            return valor.Replace("\\", "\\\\").Replace("'", "\\'");
+            return valor.Replace("\\", "\\\\").Replace("'", "\\'")
+                .Replace("\r", "\\r").Replace("\n", "\\n").Replace("\u2028", "\\u2028").Replace("\u2029", "\\u2029");
         }
+
+        internal static string ValorEnv(string valor)
+        {
+            valor ??= "";
+            if (valor.Contains('\r') || valor.Contains('\n'))
+                throw new ArgumentException("Os valores de configuração não podem conter quebras de linha.");
+            foreach (char aspas in new[] { '\'', '`', '"' })
+                if (!valor.Contains(aspas) && (aspas != '"' || (!valor.Contains("\\n") && !valor.Contains("\\r")))) return aspas + valor + aspas;
+            throw new ArgumentException("O valor contém todos os tipos de aspas. Ajuste-o antes de salvar no .env.");
+        }
+
+        internal static bool EhIdentificadorJS(string nome) =>
+            !string.IsNullOrEmpty(nome) && Regex.IsMatch(nome, "^[A-Za-z_][A-Za-z0-9_]*$") && !EhPalavraReservadaJS(nome);
+
+        internal static bool EhNomeArquivoWindows(string nome) =>
+            !string.IsNullOrWhiteSpace(nome) && !Regex.IsMatch(nome, @"^(con|prn|aux|nul|com[1-9]|lpt[1-9])$", RegexOptions.IgnoreCase);
 
         public static bool EhPalavraReservadaJS(string valor)
         {

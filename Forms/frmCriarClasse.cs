@@ -95,7 +95,11 @@ namespace NodePunch.Forms
             chkControlador = CriarCheckBox("Criar Controller junto", new Point(24, 340));
 
             btnCriarClasses = CriarBotaoPrimario("Criar Classe(s)", new Point(236, 380), new Size(160, 44));
-            btnCriarClasses.Click += btnCriarClasses_Click;
+            btnCriarClasses.Click += (sender, args) =>
+            {
+                try { btnCriarClasses_Click(sender, args); }
+                catch (Exception ex) { MessageBox.Show(ex.Message, "Erro ao criar classe", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            };
 
             this.ClientSize = new Size(420, 450);
             this.BackColor = CorFundo;
@@ -197,9 +201,9 @@ namespace NodePunch.Forms
                     return;
                 }
             }
-            if (Funcoes.EhPalavraReservadaJS(txtPropriedade.Text))
+            if (!Funcoes.EhIdentificadorJS(txtPropriedade.Text) || txtPropriedade.Text == "constructor")
             {
-                MessageBox.Show($"\"{txtPropriedade.Text}\" é uma palavra reservada do JavaScript e não pode ser usada como propriedade.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show("A propriedade deve começar com letra ou sublinhado e não pode usar palavras reservadas ou 'constructor'.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 txtPropriedade.Clear();
                 txtPropriedade.Focus();
                 return;
@@ -227,9 +231,9 @@ namespace NodePunch.Forms
                 MessageBox.Show("O nome da Classe só tinha caracteres inválidos (acentos/símbolos). Use letras ou números.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
-            if (Funcoes.EhPalavraReservadaJS(nomeClasse))
+            if (!Funcoes.EhIdentificadorJS(nomeClasse) || !Funcoes.EhNomeArquivoWindows(nomeClasse) || (chkModelBanco.Checked && nomeClasse == "Banco"))
             {
-                MessageBox.Show($"\"{nomeClasse}\" é uma palavra reservada do JavaScript e não pode ser usada como nome de classe.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show("Use um nome que comece com letra ou sublinhado, sem palavras reservadas. Um model que estende Banco precisa ter outro nome.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
 

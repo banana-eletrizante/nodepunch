@@ -304,7 +304,9 @@ namespace NodePunch.Forms
             }
             try
             {
-                Process.Start(caminhoVsc, CaminhoProjeto);
+                var inicio = new ProcessStartInfo(caminhoVsc) { UseShellExecute = false };
+                inicio.ArgumentList.Add(CaminhoProjeto);
+                Process.Start(inicio);
             }
             catch (Exception ex)
             {

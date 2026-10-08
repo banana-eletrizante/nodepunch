@@ -43,7 +43,7 @@ namespace NodePunch.Forms
 
             lblVersao = new Label
             {
-                Text = "v1.2",
+                Text = "v" + Application.ProductVersion.Split('+')[0],
                 Font = new Font("Segoe UI Semibold", 8f),
                 ForeColor = Color.Black,
                 BackColor = CorAmarelo,
@@ -54,7 +54,7 @@ namespace NodePunch.Forms
 
             btnInfo = CriarBotaoIcone("?", new Point(428, 22));
             btnInfo.Click += (s, e) => MessageBox.Show(
-                "NODEPUNCH  1.2\n\nGera um backend Express com:\n• helmet, rate-limit e /health\n• JWT (registrar / login)\n• MySQL, PostgreSQL ou Firebase\n• npm install ao criar o projeto\n\nandre-rosler.com",
+                "NODEPUNCH " + Application.ProductVersion.Split('+')[0] + "\n\nGera um backend Express com:\n• helmet, rate-limit e /health\n• JWT (registrar / login)\n• MySQL, PostgreSQL ou Firebase\n• npm install opcional para o backend\n\nandre-rosler.com",
                 "NodePunch", MessageBoxButtons.OK, MessageBoxIcon.Information);
             btnFechar = CriarBotaoIcone("✕", new Point(468, 22));
             btnFechar.Click += (s, e) => Application.Exit();
@@ -279,7 +279,9 @@ namespace NodePunch.Forms
             }
             string nomeFinal = string.IsNullOrWhiteSpace(nome) ? new DirectoryInfo(caminho).Name : nome;
             Recentes.Registrar(nomeFinal, caminho);
-            if (!Directory.Exists(Path.Combine(caminho, "node_modules")))
+            if (!Directory.Exists(Path.Combine(caminho, "node_modules")) && MessageBox.Show(
+                "As dependências do backend ainda não estão instaladas. Abrir npm install agora?",
+                "Dependências do projeto", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 Shell.AbrirNpmInstall(caminho);
             new Form1 { NomeProjeto = nomeFinal, CaminhoProjeto = caminho }.Show();
             this.Visible = false;
